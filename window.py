@@ -47,24 +47,33 @@ class NewObjectWindow(tk.Toplevel):
 	def __create_object(self):
 		# get object name
 		name = self.ent_name.get()
+		# ger Check Button value
+		chkButton = self.chkValue.get()
 		# get coordinates list
 		coord = list(
 			map(
 				lambda x: tuple(map(int, x.split(","))), 
 				re.findall(
-					r'\(([ ]*\d+[ ]*[,][ ]*\d+[ ]*)\)',
+					r'\(([ ]*-?\d+[ ]*[,][ ]*-?\d+[ ]*)\)',
 					self.ent_coord.get()
 				)
 			)
 		)
-		c = coord[0]
-		x = c[0]
-		y = c[1]
 		canvas = self.main_window.canvas
-		xvp = ((x - canvas.minx)/(canvas.maxx-canvas.minx)) * (canvas.maxx - canvas.minx)
-		yvp = (1 - (y - canvas.miny)/(canvas.maxy-canvas.miny)) * (canvas.maxy - canvas.miny)
+		coordinates = []
+		for c in coord:
+			x = c[0]
+			y = c[1]
+			xvp = ((x - canvas.minx)/(canvas.maxx-canvas.minx)) * (500)
+			yvp = (1 - (y - canvas.miny)/(canvas.maxy-canvas.miny)) * (500)
+			coordinates.append((xvp, yvp))
 
-		self.main_window.canvas.create_line(xvp, yvp, xvp + 1, yvp)
+		for c in coordinates:
+			xvp = c[0]
+			yvp = c[1] 
+			self.main_window.canvas.create_line(xvp, yvp, xvp + 1, yvp)
+
+		self.main_window.lst_objNames.insert("end", name)
 
 	def __init_ui(self):
 		# build top frame
@@ -77,8 +86,12 @@ class NewObjectWindow(tk.Toplevel):
 		self.fr_top   = Frame(self.mainframe)
 		self.lb_name  = Label(self.fr_top, text = "Name")
 		self.lb_coord = Label(self.fr_top, text = "Coordinates")
+		self.lb_isClosed = Label(self.fr_top, text = "It's a closed object")
 		self.ent_name  = tk.Entry(self.fr_top)
 		self.ent_coord = tk.Entry(self.fr_top)
+		self.chkValue = tk.BooleanVar() 
+		self.checkB_isClosed = tk.Checkbutton(self.fr_top, variable = self.chkValue)
+
 	
 		# positioning elements
 		self.fr_top.grid(    row = 0, column = 0)
@@ -86,6 +99,8 @@ class NewObjectWindow(tk.Toplevel):
 		self.ent_name.grid(  row = 1, column = 0)
 		self.lb_coord.grid(  row = 2, column = 0)
 		self.ent_coord.grid( row = 3, column = 0)
+		self.lb_isClosed.grid(    row = 4, column = 0)
+		self.checkB_isClosed.grid(row = 5, column = 0)
 	
 	def __build_fr_bottom(self):
 		# create bottom frame
@@ -118,11 +133,24 @@ class MainWindow(tk.Tk):
 		self.mainframe.grid(row = 0, column = 0)
 
 		self.__build_interface()
+		self.__build_list_box()
 
 		self.new_object_window = NewObjectWindow(self)
 
 		self.canvas = Viewport(self.mainframe)
 		self.canvas.grid(row = 0, column = 1)
+	
+	def __build_list_box(self):
+		# create elements
+		self.fr_list_box = Frame(self.mainframe)
+		self.lb_objNames = Label(self.fr_list_box, text = "Object Names")
+		self.lst_objNames = tk.Listbox(self.fr_list_box)
+
+		# positioning elements
+		self.fr_list_box.grid( row = 0, column = 0)
+		self.lb_objNames.grid( row = 0, column = 0)
+		self.lst_objNames.grid(row = 1, column = 0)
+		
 
 	def __move(self, xam, yam):
 		canvas = self.canvas
@@ -130,28 +158,28 @@ class MainWindow(tk.Tk):
 			canvas.move(obj, xam, yam)
 
 	def __move_up(self):
-		self.__move(0, -self.canvas.delta_move)
-		self.canvas.miny -= self.canvas.delta_move
-		self.canvas.maxy -= self.canvas.delta_move
-
-	def __move_down(self):	
 		self.__move(0, self.canvas.delta_move)
 		self.canvas.miny += self.canvas.delta_move
 		self.canvas.maxy += self.canvas.delta_move
 
-	def __move_left(self):
-		self.__move(-self.canvas.delta_move, 0)
-		self.canvas.minx += self.canvas.delta_move
-		self.canvas.maxx += self.canvas.delta_move
+	def __move_down(self):	
+		self.__move(0, -self.canvas.delta_move)
+		self.canvas.miny -= self.canvas.delta_move
+		self.canvas.maxy -= self.canvas.delta_move
 
-	def __move_right(self):
+	def __move_left(self):
 		self.__move(self.canvas.delta_move, 0)
 		self.canvas.minx -= self.canvas.delta_move
 		self.canvas.maxx -= self.canvas.delta_move
 
+	def __move_right(self):
+		self.__move(-self.canvas.delta_move, 0)
+		self.canvas.minx += self.canvas.delta_move
+		self.canvas.maxx += self.canvas.delta_move
+
 	def __build_interface(self):
-		self.frame_commands = Frame(self.mainframe, padx = 10)
-		self.frame_commands.grid(row = 0, column = 0)
+		self.frame_commands = Frame(self.mainframe)
+		self.frame_commands.grid(row = 1, column = 0)
 
 		self.button_newobject = Button(
 			self.frame_commands,
@@ -160,8 +188,22 @@ class MainWindow(tk.Tk):
 		)
 		self.button_newobject.grid(row = 0, column = 0)
 
+		self.frame_zoom = Frame(self.frame_commands)
+		self.frame_zoom.grid(row = 1, column = 0)
+		self.button_in = Button(
+			self.frame_zoom,
+			text = "In" # ,command = self.canvas.scale
+		)
+		self.button_out = Button(
+			self.frame_zoom,
+			text = "Out" # ,command = self.canvas.scale
+		)
+		self.button_in.grid(row = 0, column = 0)
+		self.button_out.grid(row = 0, column = 1)
+
 		self.frame_arrows = Frame(self.frame_commands)
-		self.frame_arrows.grid(row = 1, column = 0)
+		self.frame_arrows.grid(row = 2, column = 0)
+
 
 		self.button_up = tk.Button(
 			self.frame_arrows,
