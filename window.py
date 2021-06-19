@@ -57,7 +57,14 @@ class NewObjectWindow(tk.Toplevel):
 				)
 			)
 		)
-		print(coord)
+		c = coord[0]
+		x = c[0]
+		y = c[1]
+		canvas = self.main_window.canvas
+		xvp = ((x - canvas.minx)/(canvas.maxx-canvas.minx)) * (canvas.maxx - canvas.minx)
+		yvp = (1 - (y - canvas.miny)/(canvas.maxy-canvas.miny)) * (canvas.maxy - canvas.miny)
+
+		self.main_window.canvas.create_line(xvp, yvp, xvp + 1, yvp)
 
 	def __init_ui(self):
 		# build top frame
@@ -124,15 +131,23 @@ class MainWindow(tk.Tk):
 
 	def __move_up(self):
 		self.__move(0, -self.canvas.delta_move)
+		self.canvas.miny -= self.canvas.delta_move
+		self.canvas.maxy -= self.canvas.delta_move
 
 	def __move_down(self):	
 		self.__move(0, self.canvas.delta_move)
+		self.canvas.miny += self.canvas.delta_move
+		self.canvas.maxy += self.canvas.delta_move
 
 	def __move_left(self):
 		self.__move(-self.canvas.delta_move, 0)
+		self.canvas.minx += self.canvas.delta_move
+		self.canvas.maxx += self.canvas.delta_move
 
 	def __move_right(self):
 		self.__move(self.canvas.delta_move, 0)
+		self.canvas.minx -= self.canvas.delta_move
+		self.canvas.maxx -= self.canvas.delta_move
 
 	def __build_interface(self):
 		self.frame_commands = Frame(self.mainframe, padx = 10)
@@ -192,6 +207,10 @@ class Viewport(tk.Canvas):
 		self.height = height
 		self.delta_move = delta_move
 		self.delta_zoom = delta_zoom
+		self.minx = -self.width/2
+		self.miny = -self.height/2
+		self.maxx = self.width/2
+		self.maxy = self.height/2
 
 		super().__init__(
 			master = master,
