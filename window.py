@@ -3,14 +3,36 @@ import tkinter as tk
 import re
 
 class GraphicObject:
-	def __init__(self, name, is_closed = False, *args):
+	def __init__(self, canvas, name, is_closed, args):
+		self.canvas = canvas
 		self.name = name
 		self.is_closed = is_closed
 		self.coordinates = args
 	
-	@abstractclassmethod
+	#@abstractclassmethod
 	def draw(self):
-		pass
+		if len(self.coordinates) == 1:
+			c = self.coordinates[0] 
+			xvp = c[0]
+			yvp = c[1] 
+			self.canvas.create_line(xvp, yvp, xvp + 1, yvp)
+		else:
+			for i in range(len(self.coordinates) - 1):
+				c = self.coordinates[i]
+				d = self.coordinates[i + 1]
+				xvp1 = c[0]
+				yvp1 = c[1] 
+				xvp2 = d[0]
+				yvp2 = d[1]
+				self.canvas.create_line(xvp1, yvp1, xvp2, yvp2)
+			if self.is_closed:
+				c = self.coordinates[-1]
+				d = self.coordinates[0]
+				xvp1 = c[0]
+				yvp1 = c[1]
+				xvp1 = d[0]
+				yvp1 = d[1]
+				self.canvas.create_line(xvp1, yvp1, xvp2, yvp2)
 
 class Frame(tk.Frame):
 	def __init__(self, master, padx = 10, pady = 10, *args, **kwargs):
@@ -64,15 +86,19 @@ class NewObjectWindow(tk.Toplevel):
 		for c in coord:
 			x = c[0]
 			y = c[1]
-			xvp = ((x - canvas.minx)/(canvas.maxx-canvas.minx)) * (500)
-			yvp = (1 - (y - canvas.miny)/(canvas.maxy-canvas.miny)) * (500)
+			xvp = ((x - canvas.minx)/(canvas.maxx-canvas.minx)) * (canvas.vpmaxx)
+			yvp = (1 - (y - canvas.miny)/(canvas.maxy-canvas.miny)) * (canvas.vpmaxy)
 			coordinates.append((xvp, yvp))
+		
+		newGraphicObject = GraphicObject(
+			canvas,
+			name,
+			chkButton,
+			coordinates
+		)
 
-		for c in coordinates:
-			xvp = c[0]
-			yvp = c[1] 
-			self.main_window.canvas.create_line(xvp, yvp, xvp + 1, yvp)
-
+		self.main_window.graphicObjects.append(newGraphicObject)
+		newGraphicObject.draw()
 		self.main_window.lst_objNames.insert("end", name)
 
 	def __init_ui(self):
@@ -127,6 +153,9 @@ class MainWindow(tk.Tk):
 	def __init__(self):
 		# create window
 		super().__init__()
+
+		# list of objects
+		self.graphicObjects = []
 
 		# we shouldn't place elements directly in root
 		self.mainframe = Frame(self)
@@ -253,6 +282,8 @@ class Viewport(tk.Canvas):
 		self.miny = -self.height/2
 		self.maxx = self.width/2
 		self.maxy = self.height/2
+		self.vpmaxx = self.width
+		self.vpmaxy = self.height
 
 		super().__init__(
 			master = master,
