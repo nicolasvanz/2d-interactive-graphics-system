@@ -1,4 +1,5 @@
 import tkinter as tk
+import window
 from shapes import *
 from tk_adaptations import *
 
@@ -76,7 +77,6 @@ class NewObjectWindowInterface(tk.Toplevel):
 
 class MainWindowInterface(tk.Tk):
 	def __init__(self):
-		import window
 		# create window
 		super().__init__()
 

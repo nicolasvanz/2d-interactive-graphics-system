@@ -1,10 +1,9 @@
-from abc import abstractclassmethod
 import tkinter as tk
-from tk_adaptations import *
-from shapes import *
 import windows_interfaces
 import re
 import math
+from tk_adaptations import *
+from shapes import *
 
 
 class MainWindow(windows_interfaces.MainWindowInterface):
