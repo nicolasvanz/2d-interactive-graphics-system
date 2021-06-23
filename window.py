@@ -21,51 +21,23 @@ class MainWindow(windows_interfaces.MainWindowInterface):
 
 		self.canvas.draw()
 
-	def __zoom(self, delta):
-		rangex = (self.canvas.maxx - self.canvas.minx) / 2
-		rangey = (self.canvas.maxy - self.canvas.miny) / 2
-	
-		# get center coordinates
-		midlex = (self.canvas.maxx + self.canvas.minx) / 2
-		midley = (self.canvas.maxy + self.canvas.miny) / 2
-
-		# rearange window position
-		self.canvas.minx = midlex - (rangex * 1 / delta)
-		self.canvas.miny = midley - (rangey * 1 / delta)
-		self.canvas.maxx = midlex + (rangex * 1 / delta)
-		self.canvas.maxy = midley + (rangey * 1 / delta)
-
-		# update image scale
-		self.canvas.imgscale *= delta
-		# redraw scene
-		self.canvas.draw()
-
 	def __zoom_in(self):
-		self.__zoom(self.canvas.delta_zoom)
+		self.canvas.zoom(self.canvas.delta_zoom)
 		
 	def __zoom_out(self):
-		self.__zoom(1 / self.canvas.delta_zoom)
-	
+		self.canvas.zoom(1 / self.canvas.delta_zoom)
+
 	def __move_up(self):
-		self.canvas.miny += self.canvas.delta_move
-		self.canvas.maxy += self.canvas.delta_move
-		self.canvas.draw()
+		self.canvas.movewin(0, self.canvas.delta_move)
 		
 	def __move_down(self):
-		self.canvas.miny -= self.canvas.delta_move
-		self.canvas.maxy -= self.canvas.delta_move
-		self.canvas.draw()
+		self.canvas.movewin(0, -self.canvas.delta_move)
 
 	def __move_left(self):
-		self.canvas.minx -= self.canvas.delta_move
-		self.canvas.maxx -= self.canvas.delta_move
-		self.canvas.draw()
+		self.canvas.movewin(-self.canvas.delta_move, 0)
 
 	def __move_right(self):
-		self.canvas.minx += self.canvas.delta_move
-		self.canvas.maxx += self.canvas.delta_move
-		self.canvas.draw()
-
+		self.canvas.movewin(self.canvas.delta_move, 0)
 
 class Viewport(tk.Canvas):
 	def __init__(self, master, mainwindow):
@@ -169,6 +141,31 @@ class Viewport(tk.Canvas):
 		for i in self.graphicObjects:
 			i.draw()
 	
+	def movewin(self, deltax, deltay):
+		self.maxx += deltax
+		self.minx += deltax
+		self.maxy += deltay
+		self.miny += deltay
+		self.draw()
+	
+	def zoom(self, delta):
+		rangex = (self.maxx - self.minx) / 2
+		rangey = (self.maxy - self.miny) / 2
+	
+		# get center coordinates
+		midlex = (self.maxx + self.minx) / 2
+		midley = (self.maxy + self.miny) / 2
+
+		# rearange window position
+		self.minx = midlex - (rangex * 1 / delta)
+		self.miny = midley - (rangey * 1 / delta)
+		self.maxx = midlex + (rangex * 1 / delta)
+		self.maxy = midley + (rangey * 1 / delta)
+
+		# update image scale
+		self.imgscale *= delta
+		# redraw scene
+		self.draw()
 
 
 class NewObjectWindow(windows_interfaces.NewObjectWindowInterface):
@@ -205,10 +202,3 @@ class NewObjectWindow(windows_interfaces.NewObjectWindowInterface):
 
 		# update object names list box
 		self.mainwindow.lst_objNames.insert("end", obj.name)
-
-def test():
-	root = MainWindow()
-	root.mainloop()
-
-if __name__ == "__main__":
-	test()
