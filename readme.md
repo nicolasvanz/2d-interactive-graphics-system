@@ -12,6 +12,8 @@ The main window interface is divided in two sections:
 
 The "New Object" window is responsable for the creation of a new object.
  - It must be specified a name and all the points coordinates that compose the object.
+ - The coordinates must follow this format:
+ (x1, y1), (x2, y2), ...
  - If the first coordinate is connected to the last coordinate, the "is a closed object" checkbox must be marked
  - "Ok" button confirms the object creation
 
