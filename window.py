@@ -10,33 +10,44 @@ class MainWindow(windows_interfaces.MainWindowInterface):
 	def __init__(self):
 		super().__init__()
 
-		# overwrite button functions 
-		# (it takes initialy from MainWindowInterface functions)
-		self.button_in.configure(   command = self.__zoom_in)
-		self.button_out.configure(  command = self.__zoom_out)		
-		self.button_up.configure(   command = self.__move_up)		
-		self.button_down.configure( command = self.__move_down)
-		self.button_left.configure( command = self.__move_left)
-		self.button_right.configure(command = self.__move_right)
-
 		self.canvas.draw()
 
-	def __zoom_in(self):
+	def _new_object(self):
+		self.new_object_window.show()
+	
+	def _transform_object(self):
+		self.transform_window.show()
+	
+	def _remove_object(self):
+		index = self.lst_objNames.curselection()
+		
+		# must be one and oly one object
+		if (len(index) != 1): return
+
+		# remove object from object list
+		index = index[0]
+		self.canvas.remove_object(index)
+		
+		# remove object name from list box
+		assert(index < self.lst_objNames.size())
+		self.lst_objNames.delete(index)
+
+	def _zoom_in(self):
 		self.canvas.zoom(self.canvas.delta_zoom)
 		
-	def __zoom_out(self):
+	def _zoom_out(self):
 		self.canvas.zoom(1 / self.canvas.delta_zoom)
 
-	def __move_up(self):
+	def _move_up(self):
 		self.canvas.movewin(0, self.canvas.delta_move)
 		
-	def __move_down(self):
+	def _move_down(self):
 		self.canvas.movewin(0, -self.canvas.delta_move)
 
-	def __move_left(self):
+	def _move_left(self):
 		self.canvas.movewin(-self.canvas.delta_move, 0)
 
-	def __move_right(self):
+	def _move_right(self):
 		self.canvas.movewin(self.canvas.delta_move, 0)
 
 class Viewport(tk.Canvas):
@@ -61,6 +72,7 @@ class Viewport(tk.Canvas):
 		self.maxy = self.height/2
 
 		self.graphicObjects = []
+		self.axis_list = []
 
 		self.graphic_object_creator = GraphicObjectCreator(
 			self
@@ -113,9 +125,9 @@ class Viewport(tk.Canvas):
 			fill = "green"
 		)
 
-		# add axis to the objects list to display them
-		self.graphicObjects.append(axisx)
-		self.graphicObjects.append(axisy)
+		# add axis to the axis_list
+		self.axis_list.append(axisx)
+		self.axis_list.append(axisy)
 		
 		self.draw()
 	
@@ -136,16 +148,29 @@ class Viewport(tk.Canvas):
 
 		return newGraphicObject
 
+	def remove_object(self, index):
+		assert(index < len(self.graphicObjects))
+
+		self.graphicObjects.pop(index)
+
+		self.draw()
+
 	def draw(self):
 		self.delete("all")
+		for i in self.axis_list:
+			i.draw()
 		for i in self.graphicObjects:
 			i.draw()
+		
 	
 	def movewin(self, deltax, deltay):
+		# update window edges coordinates
 		self.maxx += deltax
 		self.minx += deltax
 		self.maxy += deltay
 		self.miny += deltay
+
+		# redraw scene
 		self.draw()
 	
 	def zoom(self, delta):
@@ -202,3 +227,7 @@ class NewObjectWindow(windows_interfaces.NewObjectWindowInterface):
 
 		# update object names list box
 		self.mainwindow.lst_objNames.insert("end", obj.name)
+
+class TransformWindow(windows_interfaces.TransformWindowInterface):
+	def submit(self):
+		pass
