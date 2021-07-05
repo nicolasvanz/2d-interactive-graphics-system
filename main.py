@@ -1,4 +1,4 @@
-from window import *
+from windows.functions import MainWindow
 
 
 def main():
