@@ -1,12 +1,14 @@
-import tkinter as tk
-import windows_interfaces
 import re
 import math
-from tk_adaptations import *
-from shapes import *
+import tkinter as tk
+import windows.interfaces as wi
+from utils.tk_adaptations import *
+from graphic_objects.shapes import *
+from utils.transformer import *
+from utils.helper import *
 
 
-class MainWindow(windows_interfaces.MainWindowInterface):
+class MainWindow(wi.MainWindowInterface):
 	def __init__(self):
 		super().__init__()
 
@@ -18,14 +20,21 @@ class MainWindow(windows_interfaces.MainWindowInterface):
 	def _transform_object(self):
 		self.transform_window.show()
 	
-	def _remove_object(self):
+	def get_selected_object(self):
 		index = self.lst_objNames.curselection()
-		
-		# must be one and oly one object
-		if (len(index) != 1): return
+		# must be one and only one object
+		if (len(index) != 1): return -1
+
+		return index[0]
+
+	def _remove_object(self):
+		index = self.get_selected_object()
+
+		if (index == -1):
+			print("No selected object to remove")
+			return
 
 		# remove object from object list
-		index = index[0]
 		self.canvas.remove_object(index)
 		
 		# remove object name from list box
@@ -87,24 +96,6 @@ class Viewport(tk.Canvas):
 
 		self.__create_axis()
 
-	def transform(self, coords):
-		transformed = []
-		kx = self.width
-		ky = self.height
-		tx = (self.maxx-self.minx)
-		ty = (self.maxy-self.miny)
-		for c in coords:
-			x, y = c
-
-			transformed.append(
-				(
-					(     (x - self.minx) / tx)  * kx,
-					(1 - ((y - self.miny) / ty)) * ky
-				)
-			)
-
-		return transformed
-	
 	def __create_axis(self):
 		axisx = AxisX(
 			canvas = self,
@@ -130,7 +121,30 @@ class Viewport(tk.Canvas):
 		self.axis_list.append(axisy)
 		
 		self.draw()
+
+	def transform_viewport(self, coords):
+		transformed = []
+		kx = self.width
+		ky = self.height
+		tx = (self.maxx-self.minx)
+		ty = (self.maxy-self.miny)
+		for c in coords:
+			x, y = c
+
+			transformed.append(
+				(
+					(     (x - self.minx) / tx)  * kx,
+					(1 - ((y - self.miny) / ty)) * ky
+				)
+			)
+
+		return transformed
 	
+	def transform_object(self, index, matrix):
+		obj = self.graphicObjects[index]
+		obj.transform(matrix)
+		self.draw()
+
 	def create_object(self, name, coords, is_closed = False, fill = "black"):
 		# create new graphic object
 		newGraphicObject = self.graphic_object_creator.create(
@@ -193,7 +207,7 @@ class Viewport(tk.Canvas):
 		self.draw()
 
 
-class NewObjectWindow(windows_interfaces.NewObjectWindowInterface):
+class NewObjectWindow(wi.NewObjectWindowInterface):
 	def submit(self):
 		# get object name
 		name = self.ent_name.get()
@@ -204,16 +218,9 @@ class NewObjectWindow(windows_interfaces.NewObjectWindowInterface):
 		
 		# ger Check Button value
 		is_closed = self.chkValue.get()
+		
 		# get coordinates list
-		coord = list(
-			map(
-				lambda x: tuple(map(int, x.split(","))), 
-				re.findall(
-					r'\(([ ]*-?\d+[ ]*[,][ ]*-?\d+[ ]*)\)',
-					self.ent_coord.get()
-				)
-			)
-		)
+		coord = Helper.get_coords_from_entry(self.ent_coord.get())
 
 		if (not coord):
 			print("No coordinates specified")
@@ -228,6 +235,56 @@ class NewObjectWindow(windows_interfaces.NewObjectWindowInterface):
 		# update object names list box
 		self.mainwindow.lst_objNames.insert("end", obj.name)
 
-class TransformWindow(windows_interfaces.TransformWindowInterface):
+class TransformWindow(wi.TransformWindowInterface):
 	def submit(self):
-		pass
+		index = self.mainwindow.get_selected_object()
+
+		if (index == -1):
+			print("No object selected to transform")
+			return
+		
+		obj = self.mainwindow.canvas.graphicObjects[index]
+
+		translate = self.translate.get()
+		rotate = self.rotate.get()
+		scale = self.scale.get()
+	
+		matrix = Transformer.identity()
+
+		if scale:
+			scale_factor = Helper.get_coords_from_entry(self.scal_ent.get())
+			if (len(scale_factor) != 1):
+				print("invalid scale factor specified")
+				return
+			scale_factor = scale_factor[0]
+			center = obj.get_center()
+			matrix = Transformer.scale(matrix, scale_factor, center)
+
+		if rotate:
+			try:
+				angle = float(self.rot_ent_angle.get())
+			except ValueError:
+				print("invalid angle specified")
+				return
+			rtype = self.rotation_type.get()
+			if (rtype == self.rot_combbx_options[0]):
+				point = obj.get_center()
+			elif (rtype == self.rot_combbx_options[1]):
+				point = (0, 0) # world center
+			else:
+				point = Helper.get_coords_from_entry(self.rot_ent_point.get())
+				if (len(point) != 1):
+					print("invalid rotation point specified")
+					return
+				point = point[0]
+			matrix = Transformer.rotation(matrix, angle, point)
+
+		if translate:
+			vector = Helper.get_coords_from_entry(self.trans_ent.get())
+			if (len(vector) != 1):
+				print("invalid translation vector specified")
+				return
+			vector = vector[0]
+			matrix = Transformer.translation(matrix, vector)
+
+		self.mainwindow.canvas.transform_object(index, matrix)

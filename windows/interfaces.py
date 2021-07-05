@@ -1,8 +1,8 @@
 import tkinter as tk
+import windows.functions as wf
 from tkinter import ttk
-import window
-from shapes import *
-from tk_adaptations import *
+from graphic_objects.shapes import *
+from utils.tk_adaptations import *
 
 
 class SecondWindow(tk.Toplevel):
@@ -32,7 +32,7 @@ class SecondWindow(tk.Toplevel):
 		# build user interface
 		self._init_ui()
 
-		# set window as opened
+		# set window as initiated
 		self.initiated = True
 
 	def show(self):
@@ -275,10 +275,10 @@ class MainWindowInterface(tk.Tk):
 		# we shouldn't place elements directly in root
 		self.mainframe = Frame(self)
 		
-		self.new_object_window = window.NewObjectWindow(mainwindow = self)
-		self.transform_window = window.TransformWindow(mainwindow = self)
+		self.new_object_window = wf.NewObjectWindow(mainwindow = self)
+		self.transform_window = wf.TransformWindow(mainwindow = self)
 
-		self.canvas = window.Viewport(self.mainframe, mainwindow = self)
+		self.canvas = wf.Viewport(self.mainframe, mainwindow = self)
 
 		self.__init_ui()
 		
