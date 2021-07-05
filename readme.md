@@ -29,10 +29,11 @@ The "Transform Object" window is responsable for the object transformation funct
  - In rotation:
     - The object is rotated arround a point, according to the selected rotation type. The point can be its center, the world center or any arbitrary point
     - An angle in degrees must be specified
-    - If the rotation type is "arbitrary point", a point must be specified following **SCF
+    - If the rotation type is "arbitrary point", a point must be specified following **SCF  
 
 
-**MCF = multiple coordinates format = (x1, y1), (x2, y2), ...
+**MCF = multiple coordinates format = (x1, y1), (x2, y2), ...  
+
 **SCF = single coordinate format = (x, y)
 ## Development Environment
  - Operational System: Ubuntu 20.04
@@ -47,7 +48,7 @@ python -m virtualenv env
 ```
 source env/bin/activate
 ```
-#### Install python modules
+#### Install dependencies
 ```
 pip install -r requirements.txt
 ```
