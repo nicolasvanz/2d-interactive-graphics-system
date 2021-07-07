@@ -157,8 +157,8 @@ class Viewport(tk.Canvas):
 		# add new object to the list
 		self.graphicObjects.append(newGraphicObject)
 
-		# draw new object
-		newGraphicObject.draw()
+		# draw the scene
+		self.draw()
 
 		return newGraphicObject
 
@@ -219,6 +219,14 @@ class NewObjectWindow(wi.NewObjectWindowInterface):
 			print("No name specified")
 			return
 		
+		if (not fill):
+			fill = "#000000"
+		else:
+			fill = Helper.validate_hex_color_entry(fill)
+			if (not fill):
+				print("invalid color code")
+				return		
+
 		# ger Check Button value
 		is_closed = self.chkValue.get()
 		

@@ -5,17 +5,17 @@ class GraphicObjectCreator:
 	def __init__(self, canvas):
 		self.canvas = canvas
 
-	def create(self, name, coords, is_closed = False, fill = "#000"):
+	def create(self, name, coords, is_closed = False, fill = "#000000"):
 		l = len(coords)
 		if l == 1:
-			return Dot(self.canvas, "[Dot]%s" % name, coords)
+			return Dot(self.canvas, "[Dot]%s" % name, coords, fill = fill)
 		elif l == 2:
 			return Line(self.canvas, "[Line]%s" % name, coords, fill = fill)
 		else:
-			return Wireframe(self.canvas, "[Wireframe]%s" % name, coords, is_closed)
+			return Wireframe(self.canvas, "[Wireframe]%s" % name, coords, is_closed, fill = fill)
 
 class GraphicObject:
-	def __init__(self, canvas, name, coords, is_closed = False, fill = "#000"):
+	def __init__(self, canvas, name, coords, is_closed = False, fill = "#000000"):
 		self.canvas = canvas
 		self.name = name
 		self.is_closed = is_closed

@@ -15,3 +15,13 @@ class Helper:
 				)
 			)
 		)
+
+	def validate_hex_color_entry(hex):
+		r = re.search("^#([A-Fa-f0-9]{9}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$", hex)
+		if (r):
+			return r.group()
+		else:
+			return None
+		
+
+
