@@ -17,6 +17,7 @@ The "New Object" window is responsable for the creation of a new object.
  - The coordinates must follow the **MCF
  - If the first coordinate is connected to the last coordinate, the "is a closed object" checkbox must be marked
  - "Ok" button confirms the object creation
+ - Optionally, a rgb color code can be specified to create the object. The default is black. The code must follow one of the **RGBF. Note that tkinter does not support all color codes
 
 The "Transform Object" window is responsable for the object transformation functions (translation, rotation and scaling)
  - It must be checked which transformations are going to be aplied.
@@ -35,6 +36,9 @@ The "Transform Object" window is responsable for the object transformation funct
 **MCF = multiple coordinates format = (x1, y1), (x2, y2), ...  
 
 **SCF = single coordinate format = (x, y)
+
+**RGBF = #rgb OR #rrggbb OR #rrrgggbbb
+
 ## Development Environment
  - Operational System: Ubuntu 20.04
  - Python 3.8.5
