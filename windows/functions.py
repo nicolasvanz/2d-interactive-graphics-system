@@ -63,7 +63,11 @@ class Viewport(tk.Canvas):
 	def __init__(self, master, mainwindow):
 		self.mainwindow = mainwindow
 
-		# viewport size
+		# window properties
+		self.win_angle = None
+		self.win_coord = None
+
+		# viewport and window size
 		self.width = 500
 		self.height = 500
 
@@ -75,10 +79,10 @@ class Viewport(tk.Canvas):
 		self.imgscale = 1
 
 		# window coordinates
-		self.minx = -self.width/2
-		self.miny = -self.height/2
-		self.maxx = self.width/2
-		self.maxy = self.height/2
+		self.minx = -1
+		self.miny = -1
+		self.maxx =  1
+		self.maxy =  1 
 
 		self.graphicObjects = []
 		self.axis_list = []
