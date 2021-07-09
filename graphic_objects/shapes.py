@@ -21,11 +21,11 @@ class GraphicObject:
 		self.name = name
 		self.is_closed = is_closed
 		self.coordinates = coords
-		self.scn = coords
+		self.scn = []
 		self.fill = fill
 	
 	@abstractclassmethod
-	def draw(self):
+	def draw(self, matrix):
 		pass
 
 	@abstractclassmethod
@@ -39,23 +39,16 @@ class GraphicObject:
 			new_coords.append((coord_multi[0], coord_multi[1]))
 		self.coordinates = new_coords
 	
-	def transform_scn(self, matrix):
+	def update_scn(self, matrix):
 		new_coords = []
-		divisor = self.canvas.width/2
 		for coord in self.coordinates:
 			coord_multi = np.dot(np.array([coord[0], coord[1], 1]), matrix)
-			new_coords.append((coord_multi[0]/divisor, coord_multi[1]/divisor))
+			new_coords.append((coord_multi[0], coord_multi[1]))
 		self.scn = new_coords
 
-	def norm_coords(self):
-		matrix = Transformer.identity()
-		matrix = Transformer.translation(matrix, self.canvas.win_coord)
-		matrix = Transformer.rotation(matrix,-self.canvas.win_angle, (0,0))
-		self.transform_scn(matrix)
-
 class Dot(GraphicObject):
-	def draw(self):
-		self.norm_coords()
+	def draw(self, matrix):
+		self.update_scn(matrix)
 		c = self.canvas.transform_viewport(self.scn)
 		x, y = c[0]
 
@@ -66,8 +59,8 @@ class Dot(GraphicObject):
 		return (center[0], center[1])
 
 class Line(GraphicObject):
-	def draw(self):
-		self.norm_coords()
+	def draw(self, matrix):
+		self.update_scn(matrix)
 		c = self.canvas.transform_viewport(self.scn)
 
 		x1, y1 = c[0]
@@ -87,8 +80,8 @@ class Line(GraphicObject):
 	
 
 class Wireframe(GraphicObject):
-	def draw(self):
-		self.norm_coords()
+	def draw(self, matrix):
+		self.update_scn(matrix)
 		c = self.canvas.transform_viewport(self.scn)
 		for i in range(len(c) - 1):
 			x1, y1 = c[i]
@@ -111,7 +104,7 @@ class Wireframe(GraphicObject):
 		return (x, y)
 
 class AxisX(GraphicObject):
-	def draw(self):
+	def draw(self, matrix):
 		x1 = self.canvas.minx
 		x2 = self.canvas.maxx
 		y1 = self.coordinates[0][1]
@@ -125,7 +118,7 @@ class AxisX(GraphicObject):
 		self.canvas.create_line(x1, y1, x2, y2, fill = self.fill)
 
 class AxisY(GraphicObject):
-	def draw(self):
+	def draw(self, matrix):
 		x1 = self.coordinates[0][0]
 		x2 = self.coordinates[1][0]
 		y1 = self.canvas.miny

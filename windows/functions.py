@@ -64,8 +64,9 @@ class Viewport(tk.Canvas):
 		self.mainwindow = mainwindow
 
 		# window properties
-		self.win_angle = None
-		self.win_coord = None
+		self.win_angle = 0
+		self.win_center_x = 0
+		self.win_center_y = 0
 
 		# viewport and window size
 		self.width = 500
@@ -79,10 +80,10 @@ class Viewport(tk.Canvas):
 		self.imgscale = 1
 
 		# window coordinates
-		self.minx = -1
-		self.miny = -1
-		self.maxx =  1
-		self.maxy =  1 
+		self.minx = -self.width/2
+		self.miny = -self.width/2
+		self.maxx =  self.height/2
+		self.maxy =  self.height/2
 
 		self.graphicObjects = []
 		self.axis_list = []
@@ -99,6 +100,17 @@ class Viewport(tk.Canvas):
 		)
 
 		self.__create_axis()
+
+	def size(self):
+		return (self.maxx - self.minx, self.maxy - self.miny)
+
+	def get_scn_matrix(self):
+		matrix = Transformer.identity()
+		matrix = Transformer.translation(matrix, (-self.canvas.win_center_x, -self.canvas.win_center_y))
+		matrix = Transformer.rotation(matrix,-self.canvas.win_angle, (0,0))
+		size = self.canvas.size()
+		matrix = Transformer.scale(matrix, (1/(size[0]/2),1/(size[1]/2)), (0,0))
+		return matrix
 
 	def __create_axis(self):
 		axisx = AxisX(
@@ -175,10 +187,11 @@ class Viewport(tk.Canvas):
 
 	def draw(self):
 		self.delete("all")
+		matrix = self.get_scn_matrix()
 		for i in self.axis_list:
-			i.draw()
+			i.draw(matrix)
 		for i in self.graphicObjects:
-			i.draw()
+			i.draw(matrix)
 		
 	
 	def movewin(self, deltax, deltay):
