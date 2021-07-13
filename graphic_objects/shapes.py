@@ -77,8 +77,6 @@ class Line(GraphicObject):
 		y = (orderedy[0][1] + orderedy[-1][1])/2
 		return (x, y)
 
-	
-
 class Wireframe(GraphicObject):
 	def draw(self, matrix):
 		self.update_scn(matrix)

@@ -15,12 +15,15 @@ class MainWindow(wi.MainWindowInterface):
 		self.canvas.draw()
 
 	def _new_object(self):
+		# display new object window
 		self.new_object_window.show()
 	
 	def _transform_object(self):
+		# display transform object window
 		self.transform_window.show()
 	
 	def get_selected_object(self):
+		# get selected element in the object list
 		index = self.lst_objNames.curselection()
 		# must be one and only one object
 		if (len(index) != 1): return -1
@@ -59,8 +62,15 @@ class MainWindow(wi.MainWindowInterface):
 	def _move_right(self):
 		self.canvas.movewin(self.canvas.delta_move, 0)
 
+	def _rotate_left(self):
+		pass
+
+	def _rotate_right(self):
+		pass
+
 class Viewport(tk.Canvas):
 	def __init__(self, master, mainwindow):
+		# root
 		self.mainwindow = mainwindow
 
 		# window properties
@@ -74,7 +84,7 @@ class Viewport(tk.Canvas):
 
 		# navigation coefitients
 		self.delta_move = 30
-		self.delta_zoom = 1.4
+		self.delta_zoom = 1.1
 
 		# scene scale
 		self.imgscale = 1
@@ -88,9 +98,7 @@ class Viewport(tk.Canvas):
 		self.graphicObjects = []
 		self.axis_list = []
 
-		self.graphic_object_creator = GraphicObjectCreator(
-			self
-		)
+		self.graphic_object_creator = GraphicObjectCreator(self)
 
 		super().__init__(
 			master = master,
@@ -136,9 +144,11 @@ class Viewport(tk.Canvas):
 		self.axis_list.append(axisx)
 		self.axis_list.append(axisy)
 		
+		# draw scene
 		self.draw()
 
 	def transform_viewport(self, coords):
+		# transform from window coordinates to viewport coordinates
 		transformed = []
 		kx = self.width
 		ky = self.height
@@ -157,6 +167,7 @@ class Viewport(tk.Canvas):
 		return transformed
 	
 	def transform_object(self, index, matrix):
+		# translate, scale or rotate an object
 		obj = self.graphicObjects[index]
 		obj.transform(matrix)
 		self.draw()
@@ -196,10 +207,10 @@ class Viewport(tk.Canvas):
 	
 	def movewin(self, deltax, deltay):
 		# update window edges coordinates
-		self.maxx += deltax
-		self.minx += deltax
-		self.maxy += deltay
-		self.miny += deltay
+		self.maxx += deltax * (1/self.imgscale)
+		self.minx += deltax * (1/self.imgscale)
+		self.maxy += deltay * (1/self.imgscale)
+		self.miny += deltay * (1/self.imgscale)
 
 		# redraw scene
 		self.draw()
@@ -244,7 +255,7 @@ class NewObjectWindow(wi.NewObjectWindowInterface):
 				print("invalid color code")
 				return		
 
-		# ger Check Button value
+		# get Check Button value
 		is_closed = self.chkValue.get()
 		
 		# get coordinates list
@@ -266,20 +277,24 @@ class NewObjectWindow(wi.NewObjectWindowInterface):
 
 class TransformWindow(wi.TransformWindowInterface):
 	def submit(self):
+		# get selected object index
 		index = self.mainwindow.get_selected_object()
 
 		if (index == -1):
 			print("No object selected to transform")
 			return
 		
+		# get selected object itself
 		obj = self.mainwindow.canvas.graphicObjects[index]
 
+		# get checkbox values
 		translate = self.translate.get()
 		rotate = self.rotate.get()
 		scale = self.scale.get()
 	
 		matrix = Transformer.identity()
 
+		# scale?
 		if scale:
 			scale_factor = Helper.get_coords_from_entry(self.scal_ent.get())
 			if (len(scale_factor) != 1):
@@ -289,6 +304,7 @@ class TransformWindow(wi.TransformWindowInterface):
 			center = obj.get_center()
 			matrix = Transformer.scale(matrix, scale_factor, center)
 
+		# rotate?
 		if rotate:
 			try:
 				angle = float(self.rot_ent_angle.get())
@@ -308,6 +324,7 @@ class TransformWindow(wi.TransformWindowInterface):
 				point = point[0]
 			matrix = Transformer.rotation(matrix, angle, point)
 
+		# translate?
 		if translate:
 			vector = Helper.get_coords_from_entry(self.trans_ent.get())
 			if (len(vector) != 1):

@@ -1,18 +1,20 @@
 import tkinter as tk
 import windows.functions as wf
-from tkinter import ttk
+from tkinter import PhotoImage, ttk
 from graphic_objects.shapes import *
 from utils.tk_adaptations import *
+from utils.helper import *
 
 
 class SecondWindow(tk.Toplevel):
 	def __init__(self, mainwindow, title_text):
-		self.mainwindow = mainwindow
-		self.title_text = title_text
-		self.is_opened = False
-		self.initiated = False
+		self.mainwindow = mainwindow # root
+		self.title_text = title_text # window title
+		self.is_opened = False       # is the window opened?
+		self.initiated = False       # has the window already been built?
 	
 	def destroy(self):
+		# destroy the window (forget structure)
 		super().destroy()
 		self.initiated = False
 
@@ -23,6 +25,8 @@ class SecondWindow(tk.Toplevel):
 	def initiate(self):
 		# create second window
 		super().__init__()
+
+		# set title
 		self.title(self.title_text)
 		
 		# we shouldn't place elements directly in root
@@ -31,6 +35,9 @@ class SecondWindow(tk.Toplevel):
 
 		# build user interface
 		self._init_ui()
+
+		# window is not resizable
+		self.wm_resizable(False, False)
 
 		# set window as initiated
 		self.initiated = True
@@ -53,6 +60,49 @@ class SecondWindow(tk.Toplevel):
 		# minimize window. Keeps structure
 		super().withdraw()
 		self.is_opened = False
+
+class ToolTip:
+	def __init__(self, mainwindow, widget, text):
+		self.mainwindow = mainwindow
+		self.widget = widget
+		self.text = text
+		self.widget.bind("<Enter>", self.enter)
+		self.widget.bind("<Leave>", self.close)
+		self.initiated = False
+
+	def enter(self, event=None):
+		# hint mode is not enabled
+		if (not self.mainwindow.hint_mode()):
+			return
+		if (self.initiated):
+			# open tip with previous structure
+			self.tw.deiconify()
+			return
+
+		# not created yet. Build structure
+		x, y, cx, cy = self.widget.bbox("insert")
+		x += self.widget.winfo_rootx() + 25
+		y += self.widget.winfo_rooty() + 20
+		# creates a toplevel window
+		self.tw = tk.Toplevel(self.widget)
+		self.tw["relief"] = "flat"
+		# Leaves only the label and removes the app window
+		self.tw.wm_overrideredirect(True)
+		self.tw.wm_geometry("+%d+%d" % (x, y))
+		label = tk.Label(
+			self.tw,
+			text=self.text,
+		)
+		label.pack(ipadx=1)
+		self.initiated = True
+
+	def close(self, event=None):
+		# hint mode is not enabled
+		if (not self.mainwindow.show_hints.get()):
+			return
+		if self.tw:
+			# minimize window. Keep structure
+			self.tw.withdraw()
 
 class TransformWindowInterface(SecondWindow):
 	def __init__(self, mainwindow, title_text = "Transform Object"):
@@ -279,26 +329,48 @@ class MainWindowInterface(tk.Tk):
 		# we shouldn't place elements directly in root
 		self.mainframe = Frame(self)
 		
+		# create second windows
 		self.new_object_window = wf.NewObjectWindow(mainwindow = self)
 		self.transform_window = wf.TransformWindow(mainwindow = self)
 
+		# create canvas
 		self.canvas = wf.Viewport(self.mainframe, mainwindow = self)
 
+		# build user interface
 		self.__init_ui()
 		
 		self.mainframe.grid(row = 0, column = 0)
 		self.canvas.grid(row = 0, column = 1)
+		# window is not resizable
+		self.wm_resizable(False, False)
+		self.title("SGI")
 
 	def __init_ui(self):
 		self.frame_left = Frame(self.mainframe)
 		self.frame_commands = Frame(self.frame_left)
 		self.frame_zoom = Frame(self.frame_commands)
 		self.frame_arrows = Frame(self.frame_commands)
+		self.frame_hints = Frame(self.frame_commands)
 		self.fr_list_box = Frame(self.frame_left)
 		self.fr_list_box_commands = Frame(self.fr_list_box)
 		
 		self.lb_objNames = Label(self.fr_list_box, text = "Object List")
 		self.lst_objNames = tk.Listbox(self.fr_list_box, width = 35)
+
+		self.images = {
+			1 : PhotoImage(file=Helper.get_image_file("arrow_left.png")),
+			2 : PhotoImage(file=Helper.get_image_file("arrow_right.png")),
+			3 : PhotoImage(file=Helper.get_image_file("arrow_up.png")),
+			4 : PhotoImage(file=Helper.get_image_file("arrow_down.png")),
+			5 : PhotoImage(file=Helper.get_image_file("zoom_in.png")),
+			6 : PhotoImage(file=Helper.get_image_file("zoom_out.png")),
+			7 : PhotoImage(file=Helper.get_image_file("rotate_left.png")),
+			8 : PhotoImage(file=Helper.get_image_file("rotate_right.png")),
+		}
+
+		self.lb_hints = Label(self.frame_hints, text = "Show hints")
+		self.show_hints = tk.BooleanVar()
+		self.chk_hints = tk.Checkbutton(self.frame_hints, variable=self.show_hints)
 
 		self.button_transform = tk.Button(
 			self.fr_list_box_commands,
@@ -320,37 +392,59 @@ class MainWindowInterface(tk.Tk):
 
 		self.button_in = tk.Button(
 			self.frame_zoom,
-			text = "In",
+			image=self.images[5],
 			command = self._zoom_in
 		)
 
 		self.button_out = tk.Button(
 			self.frame_zoom,
-			text = "Out",
+			image=self.images[6],
 			command = self._zoom_out
 		)
 
 		self.button_up = tk.Button(
 			self.frame_arrows,
-			text = "^",
+			image=self.images[3],
 			command = self._move_up
 		)
 
 		self.button_down = tk.Button(
 			self.frame_arrows,
-			text = "v",
+			image=self.images[4],
 			command = self._move_down
 		)
 		self.button_left = tk.Button(
 			self.frame_arrows,
-			text = "<",
+			image = self.images[1],
 			command = self._move_left
 		)
 		self.button_right = tk.Button(
 			self.frame_arrows,
-			text = ">",
+			image=self.images[2],
 			command = self._move_right
 		)
+		self.button_rot_left = tk.Button(
+			self.frame_arrows,
+			image=self.images[7],
+			command=self._rotate_left
+		)
+		self.button_rot_right = tk.Button(
+			self.frame_arrows,
+			image=self.images[8],
+			command=self._rotate_right
+		)
+
+		ToolTip(self, self.button_up,"moves the window up")
+		ToolTip(self, self.button_down, "moves the window down")
+		ToolTip(self, self.button_left, "moves the window to the left")
+		ToolTip(self, self.button_right, "moves the window to the right")
+		ToolTip(self, self.button_in, "zoom in")
+		ToolTip(self, self.button_out, "zoom out")
+		ToolTip(self, self.button_transform, "translate, rotate or scale the selected object")
+		ToolTip(self, self.button_newobject, "creates a new object")
+		ToolTip(self, self.button_remove, "removes the selected object")
+		ToolTip(self, self.button_rot_left, "rotates the window to the left")
+		ToolTip(self, self.button_rot_right, "rotates the window to the right")
 
 		# positioning elements
 		self.frame_left.grid(          row = 0, column = 0)
@@ -366,10 +460,19 @@ class MainWindowInterface(tk.Tk):
 		self.fr_list_box_commands.grid(row = 2, column = 0)
 		self.button_transform.grid(    row = 0, column = 0)
 		self.button_remove.grid(       row = 0, column = 1)
-		self.button_up.grid(           row = 0, column = 0, columnspan = 2)
-		self.button_left.grid(         row = 1, column = 0)
-		self.button_right.grid(        row = 1, column = 1)
-		self.button_down.grid(         row = 2, column = 0, columnspan = 2)
+		self.button_up.grid(           row = 0, column = 1)
+		self.button_rot_left.grid(     row = 0, column = 0)
+		self.button_rot_right.grid(    row = 0, column = 2)
+		self.button_left.grid(         row = 1, column = 0, columnspan=2)
+		self.button_right.grid(        row = 1, column = 1, columnspan=2)
+		self.button_down.grid(         row = 2, column = 1)
+		self.frame_hints.grid(         row = 3, column = 0)
+		self.lb_hints.grid(            row = 0, column = 0)
+		self.chk_hints.grid(           row = 0, column = 1)
+
+	def hint_mode(self):
+		# is hint mode enabled?
+		return self.show_hints.get()
 
 	def _new_object(self):
 		pass
