@@ -4,6 +4,7 @@ from tkinter import PhotoImage, ttk
 from graphic_objects.shapes import *
 from utils.tk_adaptations import *
 from utils.helper import *
+from utils.obj_helper import *
 
 
 class SecondWindow(tk.Toplevel):
@@ -335,6 +336,8 @@ class MainWindowInterface(tk.Tk):
 
 		# create canvas
 		self.canvas = wf.Viewport(self.mainframe, mainwindow = self)
+
+		self.obj_helper = Obj_helper(self.canvas)
 
 		# build user interface
 		self.__init_ui()

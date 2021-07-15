@@ -1,11 +1,10 @@
-import math
 import tkinter as tk
-from numpy import mat
 import windows.interfaces as wi
 from utils.tk_adaptations import *
 from graphic_objects.shapes import *
 from utils.transformer import *
 from utils.helper import *
+from tkinter import filedialog
 
 
 class MainWindow(wi.MainWindowInterface):
@@ -68,10 +67,17 @@ class MainWindow(wi.MainWindowInterface):
 		self.canvas.rotate(-self.canvas.delta_angle)
 
 	def _import_objfile(self):
-		pass
+		filename = filedialog.askopenfilename(
+			title="select a file"
+		)
+		self.obj_helper.import_obj(filename)
 
 	def _export_objfile(self):
-		pass
+		filename = filedialog.asksaveasfilename(defaultextension='.obj')
+		if filename is None:
+			return
+
+		self.obj_helper.export_obj(filename, self.canvas.graphicObjects)
 
 class Viewport(tk.Canvas):
 	def __init__(self, master, mainwindow):

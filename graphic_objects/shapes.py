@@ -31,6 +31,9 @@ class GraphicObject:
 	@abstractclassmethod
 	def get_center(self):
 		pass
+	
+	def get_real_name(self):
+		return self.name[self.name.index("]") + 1:]
 
 	def transform(self, matrix):
 		new_coords = []
