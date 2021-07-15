@@ -2,14 +2,16 @@
 
 ## Interface manual
 
-The main window interface is divided in two sections:
+The main window interface is divided in three sections:
+- the file menu, where you can import .obj files to the scene and export the scene as .obj file
 - the viewport, where the objects are displayed
 - the commands frame, that is divided in:
   - The objects list box, in which are displayed all objects names in the scene
   - The "New Object" Button, where new objects can be added through the creation of the "New Object" window
   - The "Remove" button, that removes the selected object from the scene
   - The "Transform" button, that transforms the selected object through the creation of the "Transform Object" window 
-  - The "in" and "out" buttons: responsable for zoom in and zoom out functionalities
+  - The zoom buttons: responsable for zoom in and zoom out functionalities
+  - The rotation buttons: responsable for window rotation to right and left
   - The arrows: responsable for window navigation to right, left, up and down
 
 The "New Object" window is responsable for the creation of a new object.
