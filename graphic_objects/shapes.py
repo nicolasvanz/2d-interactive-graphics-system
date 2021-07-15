@@ -101,30 +101,42 @@ class Wireframe(GraphicObject):
 		y = (orderedy[0][1] + orderedy[-1][1])/2
 		return (x, y)
 
-class AxisX(GraphicObject):
-	def draw(self, matrix):
-		x1 = self.canvas.minx
-		x2 = self.canvas.maxx
-		y1 = self.coordinates[0][1]
-		y2 = self.coordinates[1][1]
+class Axis(Line):
+	def update_scale(self, coef):
+		scale = Transformer.scale(
+				Transformer.identity(),
+				(coef, coef),
+				self.get_center()
+		)
+		self.transform(scale)
 
-		c = self.canvas.transform_viewport([(x1, y1), (x2, y2)])
-		
-		x1, y1 = c[0]
-		x2, y2 = c[1]
+	def update_range(self, vector):
+		translation = Transformer.translation(
+			Transformer.identity(),
+			vector
+		)
+		self.transform(translation)
 
-		self.canvas.create_line(x1, y1, x2, y2, fill = self.fill)
+# class used for objects that are not drawn. For example, the window
+class LazyGraphicObject(GraphicObject):
+	def __init__(self, coords):
+		super().__init__(
+			canvas = None,
+			name = "lazy-object",
+			coords = coords
+		)
 
-class AxisY(GraphicObject):
-	def draw(self, matrix):
-		x1 = self.coordinates[0][0]
-		x2 = self.coordinates[1][0]
-		y1 = self.canvas.miny
-		y2 = self.canvas.maxy
+class LazyWireframe(LazyGraphicObject, Wireframe):
+	# we only need parent functions
+	def __dummy(self):
+		pass
 
-		c = self.canvas.transform_viewport([(x1, y1), (x2, y2)])
-		
-		x1, y1 = c[0]
-		x2, y2 = c[1]		
+class LazyLine(LazyGraphicObject, Line):
+	# we only need parent functions
+	def __dummy(self):
+		pass
 
-		self.canvas.create_line(x1, y1, x2, y2, fill = self.fill)
+class LazyDot(LazyGraphicObject, Dot):
+	# we only need parent functions
+	def __dummy(self):
+		pass

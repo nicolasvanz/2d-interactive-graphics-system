@@ -340,7 +340,7 @@ class MainWindowInterface(tk.Tk):
 		self.__init_ui()
 		
 		self.mainframe.grid(row = 0, column = 0)
-		self.canvas.grid(row = 0, column = 1)
+		self.canvas.grid(row = 1, column = 1)
 		# window is not resizable
 		self.wm_resizable(False, False)
 		self.title("SGI")
@@ -358,19 +358,34 @@ class MainWindowInterface(tk.Tk):
 		self.lst_objNames = tk.Listbox(self.fr_list_box, width = 35)
 
 		self.images = {
-			1 : PhotoImage(file=Helper.get_image_file("arrow_left.png")),
-			2 : PhotoImage(file=Helper.get_image_file("arrow_right.png")),
-			3 : PhotoImage(file=Helper.get_image_file("arrow_up.png")),
-			4 : PhotoImage(file=Helper.get_image_file("arrow_down.png")),
-			5 : PhotoImage(file=Helper.get_image_file("zoom_in.png")),
-			6 : PhotoImage(file=Helper.get_image_file("zoom_out.png")),
-			7 : PhotoImage(file=Helper.get_image_file("rotate_left.png")),
-			8 : PhotoImage(file=Helper.get_image_file("rotate_right.png")),
+			1  : PhotoImage(file=Helper.get_image_file("arrow_left.png")),
+			2  : PhotoImage(file=Helper.get_image_file("arrow_right.png")),
+			3  : PhotoImage(file=Helper.get_image_file("arrow_up.png")),
+			4  : PhotoImage(file=Helper.get_image_file("arrow_down.png")),
+			5  : PhotoImage(file=Helper.get_image_file("zoom_in.png")),
+			6  : PhotoImage(file=Helper.get_image_file("zoom_out.png")),
+			7  : PhotoImage(file=Helper.get_image_file("rotate_left.png")),
+			8  : PhotoImage(file=Helper.get_image_file("rotate_right.png")),
+			9  : PhotoImage(file=Helper.get_image_file("import.png")),
+			10 : PhotoImage(file=Helper.get_image_file("export.png")),
 		}
 
 		self.lb_hints = Label(self.frame_hints, text = "Show hints")
 		self.show_hints = tk.BooleanVar()
 		self.chk_hints = tk.Checkbutton(self.frame_hints, variable=self.show_hints)
+
+		self.menubar = tk.Menu(self)
+		self.file_menu = tk.Menu(self.menubar, tearoff=0)
+		self.file_menu.add_command(
+			label="Import .obj file",
+			command=self._import_objfile
+		)
+		self.file_menu.add_command(
+			label="Export as .obj file",
+			command=self._export_objfile
+		)
+		self.menubar.add_cascade(label="File", menu=self.file_menu)
+		self.config(menu=self.menubar)
 
 		self.button_transform = tk.Button(
 			self.fr_list_box_commands,
@@ -433,6 +448,18 @@ class MainWindowInterface(tk.Tk):
 			image=self.images[8],
 			command=self._rotate_right
 		)
+		'''
+		self.button_import = tk.Button(
+			self.frame_topmenu,
+			image = self.images[9],
+			command=self._import_objfile
+		)
+		self.button_export = tk.Button(
+			self.frame_topmenu,
+			image = self.images[10],
+			command = self._export_objfile
+		)
+		'''
 
 		ToolTip(self, self.button_up,"moves the window up")
 		ToolTip(self, self.button_down, "moves the window down")
@@ -445,9 +472,14 @@ class MainWindowInterface(tk.Tk):
 		ToolTip(self, self.button_remove, "removes the selected object")
 		ToolTip(self, self.button_rot_left, "rotates the window to the left")
 		ToolTip(self, self.button_rot_right, "rotates the window to the right")
+		#ToolTip(self, self.button_import, "Import .obj file")
+		#ToolTip(self, self.button_export, "Export as .obj file")
 
 		# positioning elements
-		self.frame_left.grid(          row = 0, column = 0)
+		#self.frame_topmenu.grid(       row = 0, column = 0)
+		#self.button_import.grid(       row = 0, column = 0)
+		#self.button_export.grid(       row = 0, column = 1)
+		self.frame_left.grid(          row = 1, column = 0)
 		self.frame_commands.grid(      row = 1, column = 0)
 		self.button_newobject.grid(    row = 0, column = 0)
 		self.frame_zoom.grid(          row = 1, column = 0)
@@ -481,4 +513,10 @@ class MainWindowInterface(tk.Tk):
 		pass
 	
 	def _remove_object(self):
+		pass
+	
+	def _import_objfile(self):
+		pass
+
+	def _export_objfile(self):
 		pass

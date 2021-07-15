@@ -1,6 +1,6 @@
-import re
 import math
 import tkinter as tk
+from numpy import mat
 import windows.interfaces as wi
 from utils.tk_adaptations import *
 from graphic_objects.shapes import *
@@ -11,17 +11,16 @@ from utils.helper import *
 class MainWindow(wi.MainWindowInterface):
 	def __init__(self):
 		super().__init__()
-
 		self.canvas.draw()
 
 	def _new_object(self):
 		# display new object window
 		self.new_object_window.show()
-	
+
 	def _transform_object(self):
 		# display transform object window
 		self.transform_window.show()
-	
+
 	def get_selected_object(self):
 		# get selected element in the object list
 		index = self.lst_objNames.curselection()
@@ -39,33 +38,39 @@ class MainWindow(wi.MainWindowInterface):
 
 		# remove object from object list
 		self.canvas.remove_object(index)
-		
+
 		# remove object name from list box
 		assert(index < self.lst_objNames.size())
 		self.lst_objNames.delete(index)
 
 	def _zoom_in(self):
-		self.canvas.zoom(self.canvas.delta_zoom)
-		
+		self.canvas.zoom(1/self.canvas.delta_zoom)
+
 	def _zoom_out(self):
-		self.canvas.zoom(1 / self.canvas.delta_zoom)
+		self.canvas.zoom(self.canvas.delta_zoom)
 
 	def _move_up(self):
 		self.canvas.movewin(0, self.canvas.delta_move)
-		
+
 	def _move_down(self):
 		self.canvas.movewin(0, -self.canvas.delta_move)
 
 	def _move_left(self):
-		self.canvas.movewin(-self.canvas.delta_move, 0)
+		self.canvas.movewin(90, self.canvas.delta_move)
 
 	def _move_right(self):
-		self.canvas.movewin(self.canvas.delta_move, 0)
+		self.canvas.movewin(-90, self.canvas.delta_move)
 
 	def _rotate_left(self):
-		pass
+		self.canvas.rotate(self.canvas.delta_angle)
 
 	def _rotate_right(self):
+		self.canvas.rotate(-self.canvas.delta_angle)
+
+	def _import_objfile(self):
+		pass
+
+	def _export_objfile(self):
 		pass
 
 class Viewport(tk.Canvas):
@@ -75,30 +80,32 @@ class Viewport(tk.Canvas):
 
 		# window properties
 		self.win_angle = 0
-		self.win_center_x = 0
-		self.win_center_y = 0
 
-		# viewport and window size
+		# viewport size
 		self.width = 500
 		self.height = 500
 
 		# navigation coefitients
-		self.delta_move = 30
+		self.delta_move = 1/10
 		self.delta_zoom = 1.1
+		self.delta_angle = 10
 
 		# scene scale
 		self.imgscale = 1
 
 		# window coordinates
-		self.minx = -self.width/2
-		self.miny = -self.width/2
-		self.maxx =  self.height/2
-		self.maxy =  self.height/2
-
-		self.graphicObjects = []
-		self.axis_list = []
+		self.edges = LazyWireframe(
+			[
+				(-self.width/2, -self.width/2),
+				(self.height/2, -self.width/2),
+				(self.height/2, self.height/2),
+				(-self.width/2, self.height/2)
+			]
+		)
 
 		self.graphic_object_creator = GraphicObjectCreator(self)
+		self.graphicObjects = []
+		self.axis_list = []
 
 		super().__init__(
 			master = master,
@@ -110,39 +117,59 @@ class Viewport(tk.Canvas):
 		self.__create_axis()
 
 	def size(self):
-		return (self.maxx - self.minx, self.maxy - self.miny)
+		w1, w2, w3, w4 = self.edges.coordinates
+		x = ((w2[0]-w1[0])**2+(w2[1]-w1[1])**2)**0.5
+		y = ((w4[0]-w1[0])**2+(w4[1]-w1[1])**2)**0.5
+		return (x, y)
+
+	def get_center(self):
+		return self.edges.get_center()
+	
+	def get_vup(self, as_line=False):
+		edges = self.edges.coordinates
+		x = edges[-1][0] - edges[0][0]
+		y = edges[-1][1] - edges[0][1]
+		# return as point or line
+		if (as_line):
+			return LazyLine([(0, 0), (x, y)])
+		return LazyDot([(x, y)])
 
 	def get_scn_matrix(self):
+		# world transformation matrix to get coordinates in normalized
+		# coordinate system
+		size = self.size()
 		matrix = Transformer.identity()
-		matrix = Transformer.translation(matrix, (-self.canvas.win_center_x, -self.canvas.win_center_y))
-		matrix = Transformer.rotation(matrix,-self.canvas.win_angle, (0,0))
-		size = self.canvas.size()
+		matrix = Transformer.translation(matrix, tuple(map(lambda x: -x, self.get_center())))
 		matrix = Transformer.scale(matrix, (1/(size[0]/2),1/(size[1]/2)), (0,0))
+		matrix = Transformer.rotation(matrix,-self.win_angle, (0,0))
 		return matrix
 
 	def __create_axis(self):
-		axisx = AxisX(
+		# note that the axis are 2 times bigger than the size of screen. 
+		# We need it to be at least as larger as the window diagonal 
+		# for rotation support.
+		self.axisx = Axis(
 			canvas = self,
 			name = "axis-x",
 			coords = [
-				(-math.inf, 0),
-				(math.inf, 0)
+				(-self.width, 0),
+				(self.width, 0)
 			],
 			fill = "red"
 		)
-		axisy = AxisY(
+		self.axisy = Axis(
 			canvas = self,
 			name = "axis-y",
 			coords = [
-				(0, -math.inf),
-				(0, math.inf)
+				(0, -self.height),
+				(0, self.height)
 			],
 			fill = "green"
 		)
 
 		# add axis to the axis_list
-		self.axis_list.append(axisx)
-		self.axis_list.append(axisy)
+		self.axis_list.append(self.axisx)
+		self.axis_list.append(self.axisy)
 		
 		# draw scene
 		self.draw()
@@ -152,15 +179,13 @@ class Viewport(tk.Canvas):
 		transformed = []
 		kx = self.width
 		ky = self.height
-		tx = (self.maxx-self.minx)
-		ty = (self.maxy-self.miny)
 		for c in coords:
 			x, y = c
 
 			transformed.append(
 				(
-					(     (x - self.minx) / tx)  * kx,
-					(1 - ((y - self.miny) / ty)) * ky
+					(     (x + 1) / 2)  * kx,
+					(1 - ((y + 1) / 2)) * ky
 				)
 			)
 
@@ -184,6 +209,9 @@ class Viewport(tk.Canvas):
 		# add new object to the list
 		self.graphicObjects.append(newGraphicObject)
 
+		# update object names list box
+		self.mainwindow.lst_objNames.insert("end", newGraphicObject.name)
+
 		# draw the scene
 		self.draw()
 
@@ -203,37 +231,60 @@ class Viewport(tk.Canvas):
 			i.draw(matrix)
 		for i in self.graphicObjects:
 			i.draw(matrix)
-		
-	
-	def movewin(self, deltax, deltay):
-		# update window edges coordinates
-		self.maxx += deltax * (1/self.imgscale)
-		self.minx += deltax * (1/self.imgscale)
-		self.maxy += deltay * (1/self.imgscale)
-		self.miny += deltay * (1/self.imgscale)
+
+	def movewin(self, angle, delta):
+		# get translation vector
+		vup = self.get_vup()
+		matrix = Transformer.rotation(Transformer.identity(), angle, (0, 0))
+		vup.transform(matrix)
+		vup = tuple(map(lambda x: x*delta, vup.coordinates[0]))
+		matrix = Transformer.translation(Transformer.identity(), vup)
+
+		# apply translation
+		self.edges.transform(matrix)
+
+		# update axis range. They should follow window position
+		x, y = vup
+		self.axisx.update_range((x, 0))
+		self.axisy.update_range((0, y))
 
 		# redraw scene
 		self.draw()
 	
+	def rotate(self, angle):
+		# get rotation matrix
+		matrix = Transformer.rotation(
+			Transformer.identity(),
+			angle,
+			self.get_center()
+		)
+		# apply rotation
+		self.edges.transform(matrix)
+
+		# update angle
+		self.win_angle += angle
+		self.draw()
+
 	def zoom(self, delta):
-		rangex = (self.maxx - self.minx) / 2
-		rangey = (self.maxy - self.miny) / 2
-	
-		# get center coordinates
-		midlex = (self.maxx + self.minx) / 2
-		midley = (self.maxy + self.miny) / 2
+		# get scaling matrix
+		matrix = Transformer.scale(
+			Transformer.identity(),
+			(delta,delta),
+			self.get_center()	
+		)
 
-		# rearange window position
-		self.minx = midlex - (rangex * 1 / delta)
-		self.miny = midley - (rangey * 1 / delta)
-		self.maxx = midlex + (rangex * 1 / delta)
-		self.maxy = midley + (rangey * 1 / delta)
+		# apply scaling
+		self.edges.transform(matrix)
 
+		# axis should follow screen zoom
+		self.axisx.update_scale(self.imgscale*delta/self.imgscale)
+		self.axisy.update_scale(self.imgscale*delta/self.imgscale)
+		
 		# update image scale
 		self.imgscale *= delta
+
 		# redraw scene
 		self.draw()
-
 
 class NewObjectWindow(wi.NewObjectWindowInterface):
 	def submit(self):
@@ -265,15 +316,12 @@ class NewObjectWindow(wi.NewObjectWindowInterface):
 			print("No coordinates specified")
 			return
 
-		obj = self.mainwindow.canvas.create_object(
+		self.mainwindow.canvas.create_object(
 			name,
 			coord,
 			is_closed,
 			fill
 		)
-
-		# update object names list box
-		self.mainwindow.lst_objNames.insert("end", obj.name)
 
 class TransformWindow(wi.TransformWindowInterface):
 	def submit(self):
@@ -330,7 +378,17 @@ class TransformWindow(wi.TransformWindowInterface):
 			if (len(vector) != 1):
 				print("invalid translation vector specified")
 				return
-			vector = vector[0]
-			matrix = Transformer.translation(matrix, vector)
+
+			# translation should follow window rotation			
+			vector_as_dot = LazyDot(vector)
+
+			rotation = Transformer.rotation(
+				Transformer.identity(),
+				self.mainwindow.canvas.win_angle,
+				(0, 0)
+			)
+			vector_as_dot.transform(rotation)
+
+			matrix = Transformer.translation(matrix, vector_as_dot.coordinates[0])
 
 		self.mainwindow.canvas.transform_object(index, matrix)
