@@ -8,8 +8,18 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 from utils.transformer import Transformer
 from windows.functions import MainWindow
 
-def test():
-	root = MainWindow()
+
+def square(root):
+	obj = root.canvas.create_object(
+		"square",
+		[
+			(50, 50), (50, 150), (150, 150), (150, 50)
+		],
+		is_closed=True
+	)
+	return obj
+
+def batman(root):
 	obj = root.canvas.create_object(
 		"batman",
 		[
@@ -27,8 +37,27 @@ def test():
 	)
 	obj.transform(Transformer.scale(Transformer.identity(), (7, 7), obj.get_center()))
 	root.canvas.draw()
-	root.lst_objNames.insert("end", obj.name)
+	return obj
+
+def test():
+	if (len(sys.argv) < 2):
+		print("incorrect use. Usage: test.py <number>\n\n<number>:\n1-batman\n2-square")
+		exit()
+	try:
+		a = int(sys.argv[1])
+	except ValueError:
+		print("argument must be an integer")
+		exit()
+
+	tests = {
+		1 : batman,
+		2 : square
+	}
+
+	root = MainWindow()
+	tests[a](root)
 	root.mainloop()
+
 
 if __name__ == "__main__":
 	test()
