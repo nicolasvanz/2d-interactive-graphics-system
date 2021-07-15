@@ -448,18 +448,6 @@ class MainWindowInterface(tk.Tk):
 			image=self.images[8],
 			command=self._rotate_right
 		)
-		'''
-		self.button_import = tk.Button(
-			self.frame_topmenu,
-			image = self.images[9],
-			command=self._import_objfile
-		)
-		self.button_export = tk.Button(
-			self.frame_topmenu,
-			image = self.images[10],
-			command = self._export_objfile
-		)
-		'''
 
 		ToolTip(self, self.button_up,"moves the window up")
 		ToolTip(self, self.button_down, "moves the window down")
@@ -472,13 +460,7 @@ class MainWindowInterface(tk.Tk):
 		ToolTip(self, self.button_remove, "removes the selected object")
 		ToolTip(self, self.button_rot_left, "rotates the window to the left")
 		ToolTip(self, self.button_rot_right, "rotates the window to the right")
-		#ToolTip(self, self.button_import, "Import .obj file")
-		#ToolTip(self, self.button_export, "Export as .obj file")
 
-		# positioning elements
-		#self.frame_topmenu.grid(       row = 0, column = 0)
-		#self.button_import.grid(       row = 0, column = 0)
-		#self.button_export.grid(       row = 0, column = 1)
 		self.frame_left.grid(          row = 1, column = 0)
 		self.frame_commands.grid(      row = 1, column = 0)
 		self.button_newobject.grid(    row = 0, column = 0)
