@@ -52,6 +52,11 @@ class GraphicObject:
 class Dot(GraphicObject):
 	def draw(self, matrix):
 		self.update_scn(matrix)
+
+		# dot is not inside window. We don't need to draw
+		if (max(map(abs, self.scn[0])) > 1):
+			return 
+
 		c = self.canvas.transform_viewport(self.scn)
 		x, y = c[0]
 
@@ -64,7 +69,12 @@ class Dot(GraphicObject):
 class Line(GraphicObject):
 	def draw(self, matrix):
 		self.update_scn(matrix)
-		c = self.canvas.transform_viewport(self.scn)
+		clipped = self.canvas.clipping_function(self.scn, self.canvas.clipping_pad)
+
+		if (not clipped):
+			return
+
+		c = self.canvas.transform_viewport(clipped)
 
 		x1, y1 = c[0]
 		x2, y2 = c[1]
@@ -82,17 +92,29 @@ class Line(GraphicObject):
 
 class Wireframe(GraphicObject):
 	def draw(self, matrix):
+		# update normalized coordinates reference
 		self.update_scn(matrix)
-		c = self.canvas.transform_viewport(self.scn)
-		for i in range(len(c) - 1):
-			x1, y1 = c[i]
-			x2, y2 = c[i + 1]
+		coef = self.canvas.clipping_pad
+		for i in range(len(self.scn) - 1):
+			clipped = self.canvas.clipping_function(self.scn[i:i+2], coef)
+			if (not clipped):
+				continue
+			transformed = self.canvas.transform_viewport(clipped)
+			x1, y1 = transformed[0]
+			x2, y2 = transformed[1]
 			self.canvas.create_line(x1, y1, x2, y2, fill = self.fill)
 		
 		# is a closed shape?
 		if self.is_closed:
-			x1, y1 = c[-1]
-			x2, y2 = c[0]
+			clipped = self.canvas.clipping_function(
+				[self.scn[0], self.scn[-1]],
+				coef
+			)
+			if (not clipped):
+				return
+			transformed = self.canvas.transform_viewport(clipped)
+			x1, y1 = transformed[0]
+			x2, y2 = transformed[1]
 			self.canvas.create_line(x1, y1, x2, y2, fill = self.fill)
 
 	def get_center(self):
@@ -103,6 +125,18 @@ class Wireframe(GraphicObject):
 		x = (orderedx[0][0] + orderedx[-1][0])/2
 		y = (orderedy[0][1] + orderedy[-1][1])/2
 		return (x, y)
+
+class Subcanvas(GraphicObject):
+	def draw(self):
+		c = self.canvas.transform_viewport(self.coordinates)
+		for i in range(len(c) - 1):
+			x1, y1 = c[i]
+			x2, y2 = c[i + 1]
+			self.canvas.create_line(x1, y1, x2, y2, fill = self.fill)
+		
+		x1, y1 = c[-1]
+		x2, y2 = c[0]
+		self.canvas.create_line(x1, y1, x2, y2, fill = self.fill)
 
 class Axis(Line):
 	def update_scale(self, coef):

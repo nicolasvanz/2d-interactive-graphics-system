@@ -4,6 +4,7 @@ from utils.tk_adaptations import *
 from graphic_objects.shapes import *
 from utils.transformer import *
 from utils.helper import *
+from utils.clipper import Clipper
 from tkinter import filedialog
 
 
@@ -90,6 +91,26 @@ class Viewport(tk.Canvas):
 		# viewport size
 		self.width = 500
 		self.height = 500
+
+		# edge coefficient with which objects are cut 
+		# (in normalized coordinates)
+		self.clipping_pad = 0.9
+
+		# note the subcanvas is static, so we don't need it to be 
+		# a GraphicObject object
+		coef = self.clipping_pad
+		self.subcanvas = Subcanvas(
+			self,
+			"subcanvas",
+			[
+				(-coef, -coef),
+				(coef, -coef),
+				(coef, coef),
+				(-coef, coef),
+			],
+			fill="DarkGoldenrod3"
+		)
+		self.clipping_function = Clipper.cohen_sutherland
 
 		# navigation coefitients
 		self.delta_move = 1/10
@@ -179,7 +200,7 @@ class Viewport(tk.Canvas):
 		
 		# draw scene
 		self.draw()
-
+	
 	def transform_viewport(self, coords):
 		# transform from window coordinates to viewport coordinates
 		transformed = []
@@ -237,6 +258,7 @@ class Viewport(tk.Canvas):
 			i.draw(matrix)
 		for i in self.graphicObjects:
 			i.draw(matrix)
+		self.subcanvas.draw()
 
 	def movewin(self, angle, delta):
 		# get translation vector
