@@ -108,6 +108,7 @@ class ToolTip:
 class TransformWindowInterface(SecondWindow):
 	def __init__(self, mainwindow, title_text = "Transform Object"):
 		super().__init__(mainwindow, title_text)
+		self.transformations = []
 
 	def _init_ui(self):
 		self.__build_fr_translation()
@@ -115,9 +116,30 @@ class TransformWindowInterface(SecondWindow):
 		self.__build_fr_rotation()
 		self.__build_footer()
 
+	def _update_transformation_label(self):
+		self.lb_transformations["text"] = "%d transformations added" % \
+			len(self.transformations)
+	
+	def _add_matrix(self, matrix):
+		self.transformations.append(matrix)
+		self._update_transformation_label()
+
+	def _reset_transformations(self):
+		self.transformations.clear()
+		self.transformation_index = None
+		self._update_transformation_label()
+
 	def submit(self):
 		pass
 
+	def show(self):
+		super().show()
+		self._reset_transformations()
+	
+	def hide(self):
+		super().hide()
+		self._reset_transformations()
+	
 	def __change_fr_translation(self):
 		if (self.translate.get()):
 			self.trans_ent.config(state = "normal")
@@ -247,22 +269,36 @@ class TransformWindowInterface(SecondWindow):
 
 	def __build_footer(self):
 		self.fr_footer = tk.Frame(self.mainframe)
+		self.fr_buttons = tk.Frame(self.fr_footer)
+
+		self.lb_transformations = tk.Label(self.fr_footer)
 
 		self.btn_ok = tk.Button(
-			self.fr_footer,
+			self.fr_buttons,
 			text = "Ok",
 			command = self.submit
 		)
 
+		self.btn_add = tk.Button(
+			self.fr_buttons,
+			text="Add",
+			command = self.add
+		)
+
 		self.btn_cancel = tk.Button(
-			self.fr_footer,
+			self.fr_buttons,
 			text = "Cancel",
 			command = self.hide
 		)
 
 		self.fr_footer.grid( row = 3, column = 0)
+		self.lb_transformations.grid(row = 0, column = 0)
+		self.fr_buttons.grid(row = 1, column = 0)
 		self.btn_ok.grid(    row = 0, column = 0)
-		self.btn_cancel.grid(row = 0, column = 1)
+		self.btn_add.grid(   row = 0, column = 1)
+		self.btn_cancel.grid(row = 0, column = 2)
+	
+		self._update_transformation_label()
 
 class NewObjectWindowInterface(SecondWindow):
 	def __init__(self, mainwindow, title_text = "New Object"):
@@ -284,11 +320,14 @@ class NewObjectWindowInterface(SecondWindow):
 		self.lb_coord = Label(self.fr_top, text = "Coordinates")
 		self.lb_color = Label(self.fr_top, text = "Color")
 		self.lb_isClosed = Label(self.fr_top, text = "Is a closed object")
+		self.lb_isFilled = Label(self.fr_top, text = "Is a filled object")
 		self.ent_name  = tk.Entry(self.fr_top)
 		self.ent_coord = tk.Entry(self.fr_top)
 		self.ent_color = tk.Entry(self.fr_top)
-		self.chkValue = tk.BooleanVar() 
-		self.checkB_isClosed = tk.Checkbutton(self.fr_top, variable = self.chkValue)
+		self.chkclosed = tk.BooleanVar()
+		self.chkfilled = tk.BooleanVar()
+		self.checkB_isClosed = tk.Checkbutton(self.fr_top, variable = self.chkclosed)
+		self.checkB_isFilled= tk.Checkbutton(self.fr_top, variable = self.chkfilled)
 
 		# positioning elements
 		self.fr_top.grid(         row = 0, column = 0)
@@ -300,6 +339,8 @@ class NewObjectWindowInterface(SecondWindow):
 		self.ent_color.grid(      row = 5, column = 0)
 		self.lb_isClosed.grid(    row = 6, column = 0)
 		self.checkB_isClosed.grid(row = 7, column = 0)
+		self.lb_isFilled.grid(    row = 8, column = 0)
+		self.checkB_isFilled.grid(row = 9, column = 0)
 
 	def __build_fr_bottom(self):
 		# create bottom frame
@@ -354,6 +395,7 @@ class MainWindowInterface(tk.Tk):
 		self.frame_zoom = Frame(self.frame_commands)
 		self.frame_arrows = Frame(self.frame_commands)
 		self.frame_hints = Frame(self.frame_commands)
+		self.frame_clipping = Frame(self.frame_commands)
 		self.fr_list_box = Frame(self.frame_left)
 		self.fr_list_box_commands = Frame(self.fr_list_box)
 		
@@ -376,6 +418,21 @@ class MainWindowInterface(tk.Tk):
 		self.lb_hints = Label(self.frame_hints, text = "Show hints")
 		self.show_hints = tk.BooleanVar()
 		self.chk_hints = tk.Checkbutton(self.frame_hints, variable=self.show_hints)
+
+		self.lb_clipping = Label(self.frame_clipping, text="clipping algorithm")
+		self.clipping_type = tk.StringVar()
+		self.clipping_combbx = ttk.Combobox(
+			self.frame_clipping,
+			textvariable= self.clipping_type
+		)
+		self.clipping_combbx_options = (
+			"Cohen Sutherland",
+			"Liang-Barsky"
+		)
+		self.clipping_combbx['values'] = self.clipping_combbx_options
+		self.clipping_combbx["state"] = "readonly"
+		self.clipping_combbx.bind("<<ComboboxSelected>>", self.__change_clipping_type)
+		self.clipping_combbx.set(self.clipping_combbx_options[0])
 
 		self.menubar = tk.Menu(self)
 		self.file_menu = tk.Menu(self.menubar, tearoff=0)
@@ -483,13 +540,22 @@ class MainWindowInterface(tk.Tk):
 		self.button_left.grid(         row = 1, column = 0, columnspan=2)
 		self.button_right.grid(        row = 1, column = 1, columnspan=2)
 		self.button_down.grid(         row = 2, column = 1)
-		self.frame_hints.grid(         row = 3, column = 0)
+		self.frame_hints.grid(         row = 4, column = 0)
 		self.lb_hints.grid(            row = 0, column = 0)
 		self.chk_hints.grid(           row = 0, column = 1)
+		self.frame_clipping.grid(      row = 3, column = 0)
+		self.lb_clipping.grid(         row = 0, column = 0)
+		self.clipping_combbx.grid(     row = 0, column = 1)
 
 	def hint_mode(self):
 		# is hint mode enabled?
 		return self.show_hints.get()
+
+	def __change_clipping_type(self, arg=None):
+		if (self.clipping_combbx.get() == self.clipping_combbx_options[0]):
+			self.canvas.clipping_function = Clipper.cohen_sutherland
+		elif (self.clipping_combbx.get() == self.clipping_combbx_options[1]):
+			self.canvas.clipping_function = Clipper.liang_barsky
 
 	def _new_object(self):
 		pass

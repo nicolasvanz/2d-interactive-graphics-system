@@ -33,7 +33,8 @@ def batman(root):
 			(-15,-2),(-12,-4),(-10,-5),(-7,-6),(-4,-6),(-1,-6),(-1,-3),(-2,1), 
 			(0,-1),(1,0),(2,0),(3, 1),(3, 3)
 		],
-		is_closed=True
+		is_closed=True,
+		is_filled=True
 	)
 	obj.transform(Transformer.scale(Transformer.identity(), (7, 7), obj.get_center()))
 	root.canvas.draw()

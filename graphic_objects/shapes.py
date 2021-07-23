@@ -1,4 +1,5 @@
 from abc import abstractclassmethod
+from utils.clipper import Clipper
 from utils.transformer import Transformer
 import numpy as np
 
@@ -6,23 +7,39 @@ class GraphicObjectCreator:
 	def __init__(self, canvas):
 		self.canvas = canvas
 
-	def create(self, name, coords, is_closed = False, fill = "#000000"):
+	def create(self, name, coords, is_closed = False, fill = "#000000", is_filled=False):
 		l = len(coords)
 		if l == 1:
 			return Dot(self.canvas, "[Dot]%s" % name, coords, fill = fill)
 		elif l == 2:
 			return Line(self.canvas, "[Line]%s" % name, coords, fill = fill)
 		else:
-			return Wireframe(self.canvas, "[Wireframe]%s" % name, coords, is_closed, fill = fill)
+			return Wireframe(
+				self.canvas,
+				"[Wireframe]%s" % name,
+				coords,
+				is_closed,
+				fill = fill,
+				is_filled = is_filled
+			)
 
 class GraphicObject:
-	def __init__(self, canvas, name, coords, is_closed = False, fill = "#000000"):
+	def __init__(
+		self, 
+		canvas, 
+		name, 
+		coords, 
+		is_closed = False, 
+		fill = "#000000", 
+		is_filled=False
+	):
 		self.canvas = canvas
 		self.name = name
 		self.is_closed = is_closed
 		self.coordinates = coords
 		self.scn = []
 		self.fill = fill
+		self.is_filled = is_filled
 	
 	@abstractclassmethod
 	def draw(self, matrix):
@@ -94,6 +111,12 @@ class Wireframe(GraphicObject):
 	def draw(self, matrix):
 		# update normalized coordinates reference
 		self.update_scn(matrix)
+		if (self.is_filled):
+			self.__draw_filled()
+		else:
+			self.__draw_wire()
+		
+	def __draw_wire(self):
 		coef = self.canvas.clipping_pad
 		for i in range(len(self.scn) - 1):
 			clipped = self.canvas.clipping_function(self.scn[i:i+2], coef)
@@ -116,6 +139,15 @@ class Wireframe(GraphicObject):
 			x1, y1 = transformed[0]
 			x2, y2 = transformed[1]
 			self.canvas.create_line(x1, y1, x2, y2, fill = self.fill)
+
+	def __draw_filled(self):
+		coef = self.canvas.clipping_pad
+		polygon = Clipper.cohen_sutherland_polygon(self.scn, coef)
+		transformed = self.canvas.transform_viewport(polygon)
+		temp = []
+		for p in transformed:
+			temp.extend(p)
+		self.canvas.create_polygon(temp, fill = self.fill)
 
 	def get_center(self):
 		orderedx = self.coordinates.copy()

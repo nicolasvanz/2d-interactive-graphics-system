@@ -6,6 +6,7 @@ from utils.transformer import *
 from utils.helper import *
 from utils.clipper import Clipper
 from tkinter import filedialog
+from functools import reduce
 
 
 class MainWindow(wi.MainWindowInterface):
@@ -224,13 +225,14 @@ class Viewport(tk.Canvas):
 		obj.transform(matrix)
 		self.draw()
 
-	def create_object(self, name, coords, is_closed = False, fill = "black"):
+	def create_object(self, name, coords, is_closed = False, fill = "black", is_filled = False):
 		# create new graphic object
 		newGraphicObject = self.graphic_object_creator.create(
 			name,
 			coords,
 			is_closed,
-			fill
+			fill,
+			is_filled,
 		)
 
 		# add new object to the list
@@ -320,22 +322,23 @@ class NewObjectWindow(wi.NewObjectWindowInterface):
 		name = self.ent_name.get()
 
 		# get object color
-		fill = self.ent_color.get() 
+		color = self.ent_color.get() 
 		
 		if (not name):
 			print("No name specified")
 			return
 		
-		if (not fill):
-			fill = "#000000"
+		if (not color):
+			color = "#000000"
 		else:
-			fill = Helper.validate_hex_color_entry(fill)
-			if (not fill):
+			color = Helper.validate_hex_color_entry(color)
+			if (not color):
 				print("invalid color code")
 				return		
 
 		# get Check Button value
-		is_closed = self.chkValue.get()
+		is_closed = self.chkclosed.get()
+		is_filled = self.chkfilled.get()
 		
 		# get coordinates list
 		coord = Helper.get_coords_from_entry(self.ent_coord.get())
@@ -348,18 +351,20 @@ class NewObjectWindow(wi.NewObjectWindowInterface):
 			name,
 			coord,
 			is_closed,
-			fill
+			color,
+			is_filled,
 		)
 
 class TransformWindow(wi.TransformWindowInterface):
-	def submit(self):
-		# get selected object index
-		index = self.mainwindow.get_selected_object()
+	def add(self):
+		index = self.transformation_index
+		if (index == None):
+			index = self.mainwindow.get_selected_object()
+			if (index == -1):
+				print("No object selected to transform")
+				return
+			self.transformation_index = index
 
-		if (index == -1):
-			print("No object selected to transform")
-			return
-		
 		# get selected object itself
 		obj = self.mainwindow.canvas.graphicObjects[index]
 
@@ -418,5 +423,17 @@ class TransformWindow(wi.TransformWindowInterface):
 			vector_as_dot.transform(rotation)
 
 			matrix = Transformer.translation(matrix, vector_as_dot.coordinates[0])
+		
+		self._add_matrix(matrix)
+		
+	def submit(self):
+		index = self.transformation_index
+
+		if (not self.transformations):
+			return
+
+		matrix = reduce(np.dot, self.transformations)
 
 		self.mainwindow.canvas.transform_object(index, matrix)
+		
+		self._reset_transformations()

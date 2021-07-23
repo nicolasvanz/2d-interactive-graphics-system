@@ -1,9 +1,64 @@
 INSIDE = 0
-LEFT = 1
-RIGHT = 2
-BOTTOM = 4
-TOP = 8
+BOTTOM = 1
+LEFT = 2
+TOP = 4
+RIGHT = 8
 class Clipper:
+	@staticmethod
+	def inside_clip_edge(region, edge):
+		if region & edge:
+			return False
+		return True
+
+	@staticmethod
+	def intersection(x1, y1, x2, y2, edge, coef):
+		x_min, x_max, y_min, y_max = -coef, coef, -coef, coef
+		if edge & TOP:
+			x = x1 + ((x2 - x1)/(y2 - y1))*(y_max - y1)
+			y = y_max
+
+		elif edge & BOTTOM:
+			x = x1 + ((x2 - x1)/(y2 - y1))*(y_min - y1)
+			y = y_min
+
+		elif edge & RIGHT:
+			y = y1 + ((y2 - y1)/(x2 - x1))*(x_max - x1)
+			x = x_max
+
+		elif edge & LEFT:
+			y = y1 + ((y2 - y1)/(x2 - x1))*(x_min - x1)
+			x = x_min
+		return (x, y)
+
+	@staticmethod
+	def cohen_sutherland_polygon(coordinates, coef):
+		output = coordinates.copy()
+		edges = [BOTTOM, LEFT, TOP, RIGHT]
+		for i in range(4):
+			edge = edges[i]
+			current = output.copy()
+			l = len(current)
+			output = []
+			for j in range(l):
+				x1, y1 = current[j%l]
+				x2, y2 = current[(j + 1)%l]
+
+				code1 = Clipper.region_code(x1, y1, coef)
+				code2 = Clipper.region_code(x2, y2, coef)
+				state1 = Clipper.inside_clip_edge(code1, edge)
+				state2 = Clipper.inside_clip_edge(code2, edge)
+	
+				if state1 and state2:
+					output.append((x2, y2))
+				elif state1 and not state2:
+					x, y = Clipper.intersection(x1, y1, x2, y2, edge, coef)
+					output.append((x, y))
+				elif not state1 and state2:
+					x, y = Clipper.intersection(x1, y1, x2, y2, edge, coef)
+					output.append((x, y))
+					output.append((x2, y2))
+		return output
+
 	@staticmethod
 	def region_code(x, y, coef):
 		x_min, x_max, y_min, y_max = -coef, coef, -coef, coef

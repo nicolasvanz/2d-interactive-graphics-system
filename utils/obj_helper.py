@@ -64,6 +64,3 @@ class Obj_helper:
 						object_coords.pop()
 						is_closed = True
 				self.canvas.create_object(object_name, object_coords, is_closed)
-
-
-

@@ -32,4 +32,10 @@ class Helper:
 	def distance_between_points(p1, p2):
 		return (((p2[0]-p1[0])**2+(p2[1]-p1[1])**2)**0.5)
 
-
+	@staticmethod
+	def polygon_is_in_clockwise(points):
+		sum = 0
+		la = len(points)
+		for i in range(la):
+			sum += (points[(i + 1)%la][0]-points[i%la][0])*(points[(i + 1)%la][1]+points[i%la][1])
+		return True if sum > 0 else False
