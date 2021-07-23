@@ -71,7 +71,7 @@ class Dot(GraphicObject):
 		self.update_scn(matrix)
 
 		# dot is not inside window. We don't need to draw
-		if (max(map(abs, self.scn[0])) > 1):
+		if (max(map(abs, self.scn[0])) > self.canvas.clipping_pad):
 			return 
 
 		c = self.canvas.transform_viewport(self.scn)
