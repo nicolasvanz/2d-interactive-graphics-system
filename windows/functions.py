@@ -99,16 +99,13 @@ class Viewport(tk.Canvas):
 		# root
 		self.mainwindow = mainwindow
 
-		# window properties
-		self.win_angle = 0
-
 		# canvas size
 		self.width = 500
 		self.height = 500
 
 		# we make the viewport smaller than the canvas so we can test
-		# clipping algorithm. This represents the pixels amount difference
-		# between canvas and viewport
+		# clipping algorithm. This represents the difference in the amount of 
+		# pixels between canvas and viewport
 		self.clipping_border = 20
 
 		# The subcanvas is our viewport. Note the subcanvas is static, 
@@ -119,6 +116,7 @@ class Viewport(tk.Canvas):
 		self.subcanvas = Subcanvas(
 			self,
 			"subcanvas",
+			# coordinates are specified in canvas coordinates
 			[
 				(coef, coef),
 				(coef, coefh),
@@ -182,14 +180,25 @@ class Viewport(tk.Canvas):
 			return LazyLine([(0, 0), (x, y)])
 		return LazyDot([(x, y)])
 
+	# calculates current window angle
+	def get_win_angle(self):
+		vup = self.get_vup().coordinates
+		x, y = vup[0]
+		angle = math.degrees(math.atan2(-x, y))
+		return angle
+
 	# returns world's current transformation matrix to get coordinates in 
 	# normalized coordinate system
 	def get_scn_matrix(self):
 		size = self.size()
+		angle = self.get_win_angle()
 		matrix = Transformer.identity()
-		matrix = Transformer.translation(matrix, tuple(map(lambda x: -x, self.get_center())))
+		matrix = Transformer.translation(
+			matrix,
+			tuple(map(lambda x: -x, self.get_center()))
+		)
 		matrix = Transformer.scale(matrix, (1/(size[0]/2),1/(size[1]/2)), (0,0))
-		matrix = Transformer.rotation(matrix,-self.win_angle, (0,0))
+		matrix = Transformer.rotation(matrix,-angle, (0,0))
 		return matrix
 
 	# create axis
@@ -250,7 +259,14 @@ class Viewport(tk.Canvas):
 		self.draw()
 
 	# create new graphic object
-	def create_object(self, name, coords, is_closed = False, fill = "black", is_filled = False):
+	def create_object(
+		self, 
+		name, 
+		coords, 
+		is_closed = False, 
+		fill = "black", 
+		is_filled = False
+	):
 		newGraphicObject = self.graphic_object_creator.create(
 			name,
 			coords,
@@ -320,7 +336,6 @@ class Viewport(tk.Canvas):
 		self.edges.transform(matrix)
 
 		# update angle
-		self.win_angle += angle
 		self.draw()
 
 	# performs zoom in and zoom out operations
@@ -443,15 +458,17 @@ class TransformWindow(wi.TransformWindowInterface):
 
 			# translation should follow window rotation			
 			vector_as_dot = LazyDot(vector)
-
 			rotation = Transformer.rotation(
 				Transformer.identity(),
-				self.mainwindow.canvas.win_angle,
+				self.mainwindow.canvas.get_win_angle(),
 				(0, 0)
 			)
 			vector_as_dot.transform(rotation)
 
-			matrix = Transformer.translation(matrix, vector_as_dot.coordinates[0])
+			matrix = Transformer.translation(
+				matrix, 
+				vector_as_dot.coordinates[0]
+			)
 		
 		self._add_matrix(matrix)
 		
