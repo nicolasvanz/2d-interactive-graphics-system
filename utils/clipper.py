@@ -6,6 +6,7 @@ RIGHT = 8
 class Clipper:
 	@staticmethod
 	def inside_clip_edge(region, edge):
+		# is the region inside the current clipping edge?
 		if region & edge:
 			return False
 		return True
@@ -76,41 +77,35 @@ class Clipper:
 	
 	@staticmethod
 	def cohen_sutherland(line, coef):
-		x_min, x_max, y_min, y_max = -coef, coef, -coef, coef
+		# get line cooerdinates
 		x1, y1 = line[0]
 		x2, y2 = line[1]
 
+		# get coordinates' region code
 		code1 = Clipper.region_code(x1, y1, coef)
 		code2 = Clipper.region_code(x2, y2, coef)
 		valid = False
 	
+		# clip line coordinates to the window border until it gets accepted
+		# (entire in window) or reject (entire outside window)
 		while True:
+			# entire line inside window
 			if code1 == 0 and code2 == 0:
 				valid = True
 				break
 
+			# entire line outside window
 			elif (code1 & code2) != 0:
 				break
 	
 			else:
+				# which code is outside?
 				code_out = code1 if code1 != INSIDE else code2
-	
-				if code_out & TOP:
-					x = x1 + ((x2 - x1)/(y2 - y1))*(y_max - y1)
-					y = y_max
-	
-				elif code_out & BOTTOM:
-					x = x1 + ((x2 - x1)/(y2 - y1))*(y_min - y1)
-					y = y_min
-	
-				elif code_out & RIGHT:
-					y = y1 + ((y2 - y1)/(x2 - x1))*(x_max - x1)
-					x = x_max
-	
-				elif code_out & LEFT:
-					y = y1 + ((y2 - y1)/(x2 - x1))*(x_min - x1)
-					x = x_min
-	
+
+				# get intersection coordinates
+				x, y = Clipper.intersection(x1, y1, x2, y2, code_out, coef)
+
+				# overwrite point coordinates
 				if code_out == code1:
 					x1, y1 = x, y
 					code1 = Clipper.region_code(x1, y1, coef)
@@ -142,6 +137,7 @@ class Clipper:
 				neg.append(q[i]/p[i])
 			elif p[i] > 0:
 				pos.append(q[i]/p[i])
+			# line is parallel to window border and is entire outside window
 			elif (q[i] < 0):
 					return []
 		

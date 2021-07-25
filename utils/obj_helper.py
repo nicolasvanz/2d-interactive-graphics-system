@@ -2,6 +2,7 @@ class Obj_helper:
 	def __init__(self, canvas):
 		self.canvas = canvas
 
+	# exports scene as .obj file
 	def export_obj(self, filename, graphicObjects):
 		vertices = []
 		for graph_obj in graphicObjects:
@@ -34,6 +35,7 @@ class Obj_helper:
 			file.write("\n")
 		file.close()
 	
+	# Load .obj file
 	def import_obj(self, filename):
 		with open(filename) as f:
 			lines = f.readlines()

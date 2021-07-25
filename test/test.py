@@ -5,6 +5,7 @@ import os
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
+
 from utils.transformer import Transformer
 from windows.functions import MainWindow
 
@@ -36,13 +37,18 @@ def batman(root):
 		is_closed=True,
 		is_filled=True
 	)
-	obj.transform(Transformer.scale(Transformer.identity(), (7, 7), obj.get_center()))
+	obj.transform(
+		Transformer.scale(Transformer.identity(),
+		(7, 7),
+		obj.get_center())
+	)
 	root.canvas.draw()
 	return obj
 
 def test():
 	if (len(sys.argv) < 2):
-		print("incorrect use. Usage: test.py <number>\n\n<number>:\n1-batman\n2-square")
+		print("incorrect use. Usage: test.py <number>\n")
+		print("<number>:\n1-batman\n2-square")
 		exit()
 	try:
 		a = int(sys.argv[1])

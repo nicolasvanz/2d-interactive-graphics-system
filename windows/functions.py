@@ -14,22 +14,25 @@ class MainWindow(wi.MainWindowInterface):
 		super().__init__()
 		self.canvas.draw()
 
+	# display new object window
 	def _new_object(self):
-		# display new object window
 		self.new_object_window.show()
 
+	# display transform object window
 	def _transform_object(self):
-		# display transform object window
 		self.transform_window.show()
 
+	# returns the index of the selected object
 	def get_selected_object(self):
 		# get selected element in the object list
 		index = self.lst_objNames.curselection()
+		
 		# must be one and only one object
 		if (len(index) != 1): return -1
 
 		return index[0]
 
+	# removes an object from the scene
 	def _remove_object(self):
 		index = self.get_selected_object()
 
@@ -44,36 +47,46 @@ class MainWindow(wi.MainWindowInterface):
 		assert(index < self.lst_objNames.size())
 		self.lst_objNames.delete(index)
 
+	# performs window zoom in operation
 	def _zoom_in(self):
 		self.canvas.zoom(1/self.canvas.delta_zoom)
 
+	# performs window zoom out operation
 	def _zoom_out(self):
 		self.canvas.zoom(self.canvas.delta_zoom)
 
+	# moves up the window
 	def _move_up(self):
 		self.canvas.movewin(0, self.canvas.delta_move)
 
+	# moves down the window
 	def _move_down(self):
 		self.canvas.movewin(0, -self.canvas.delta_move)
 
+	# moves window to the left
 	def _move_left(self):
 		self.canvas.movewin(90, self.canvas.delta_move)
 
+	# moves window to the right
 	def _move_right(self):
 		self.canvas.movewin(-90, self.canvas.delta_move)
 
+	# rotates window to the left
 	def _rotate_left(self):
 		self.canvas.rotate(self.canvas.delta_angle)
 
+	# rotates window to the right
 	def _rotate_right(self):
 		self.canvas.rotate(-self.canvas.delta_angle)
 
+	# import obj file
 	def _import_objfile(self):
 		filename = filedialog.askopenfilename(
 			title="select a file"
 		)
 		self.obj_helper.import_obj(filename)
 
+	# export scene as obj file
 	def _export_objfile(self):
 		filename = filedialog.asksaveasfilename(defaultextension='.obj')
 		if filename is None:
@@ -89,28 +102,32 @@ class Viewport(tk.Canvas):
 		# window properties
 		self.win_angle = 0
 
-		# viewport size
+		# canvas size
 		self.width = 500
 		self.height = 500
 
-		# edge coefficient with which objects are cut 
-		# (in normalized coordinates)
-		self.clipping_pad = 0.9
+		# we make the viewport smaller than the canvas so we can test
+		# clipping algorithm. This represents the pixels amount difference
+		# between canvas and viewport
+		self.clipping_border = 20
 
-		# note the subcanvas is static, so we don't need it to be 
-		# a GraphicObject object
-		coef = self.clipping_pad
+		# The subcanvas is our viewport. Note the subcanvas is static, 
+		# so we don't need it to be a GraphicObject object
+		coef = self.clipping_border/2
+		coefw = self.width - coef
+		coefh = self.height - coef
 		self.subcanvas = Subcanvas(
 			self,
 			"subcanvas",
 			[
-				(-coef, -coef),
-				(coef, -coef),
 				(coef, coef),
-				(-coef, coef),
+				(coef, coefh),
+				(coefw, coefh),
+				(coefw, coef),
 			],
 			fill="DarkGoldenrod3"
 		)
+		# current clipping algorithm
 		self.clipping_function = Clipper.cohen_sutherland
 
 		# navigation coefitients
@@ -144,15 +161,18 @@ class Viewport(tk.Canvas):
 
 		self.__create_axis()
 
+	# returns window size
 	def size(self):
 		w1, w2, w3, w4 = self.edges.coordinates
 		x = ((w2[0]-w1[0])**2+(w2[1]-w1[1])**2)**0.5
 		y = ((w4[0]-w1[0])**2+(w4[1]-w1[1])**2)**0.5
 		return (x, y)
 
+	# returns window center
 	def get_center(self):
 		return self.edges.get_center()
 	
+	# returns Vup vector
 	def get_vup(self, as_line=False):
 		edges = self.edges.coordinates
 		x = edges[-1][0] - edges[0][0]
@@ -162,9 +182,9 @@ class Viewport(tk.Canvas):
 			return LazyLine([(0, 0), (x, y)])
 		return LazyDot([(x, y)])
 
+	# returns world's current transformation matrix to get coordinates in 
+	# normalized coordinate system
 	def get_scn_matrix(self):
-		# world transformation matrix to get coordinates in normalized
-		# coordinate system
 		size = self.size()
 		matrix = Transformer.identity()
 		matrix = Transformer.translation(matrix, tuple(map(lambda x: -x, self.get_center())))
@@ -172,8 +192,9 @@ class Viewport(tk.Canvas):
 		matrix = Transformer.rotation(matrix,-self.win_angle, (0,0))
 		return matrix
 
+	# create axis
 	def __create_axis(self):
-		# note that the axis are 2 times bigger than the size of screen. 
+		# note that the axis are 2 times bigger than the size of canvas. 
 		# We need it to be at least as larger as the window diagonal 
 		# for rotation support.
 		self.axisx = Axis(
@@ -202,31 +223,34 @@ class Viewport(tk.Canvas):
 		# draw scene
 		self.draw()
 	
+	# transform from window coordinates to viewport coordinates
 	def transform_viewport(self, coords):
-		# transform from window coordinates to viewport coordinates
 		transformed = []
-		kx = self.width
-		ky = self.height
+		# note that our drawable area is smaller than the canvas size
+		coef = self.clipping_border/2
+		kx = self.width - self.clipping_border
+		ky = self.height - self.clipping_border
 		for c in coords:
 			x, y = c
 
 			transformed.append(
 				(
-					(     (x + 1) / 2)  * kx,
-					(1 - ((y + 1) / 2)) * ky
+					(coef + (     (x + 1) / 2)  * kx),
+					(coef + (1 - ((y + 1) / 2)) * ky)
 				)
 			)
 
 		return transformed
 	
+		
+	# translate, scale or rotate an object
 	def transform_object(self, index, matrix):
-		# translate, scale or rotate an object
 		obj = self.graphicObjects[index]
 		obj.transform(matrix)
 		self.draw()
 
+	# create new graphic object
 	def create_object(self, name, coords, is_closed = False, fill = "black", is_filled = False):
-		# create new graphic object
 		newGraphicObject = self.graphic_object_creator.create(
 			name,
 			coords,
@@ -246,6 +270,7 @@ class Viewport(tk.Canvas):
 
 		return newGraphicObject
 
+	# remove graphic object
 	def remove_object(self, index):
 		assert(index < len(self.graphicObjects))
 
@@ -253,6 +278,7 @@ class Viewport(tk.Canvas):
 
 		self.draw()
 
+	# draw current scene
 	def draw(self):
 		self.delete("all")
 		matrix = self.get_scn_matrix()
@@ -262,6 +288,7 @@ class Viewport(tk.Canvas):
 			i.draw(matrix)
 		self.subcanvas.draw()
 
+	# moves the window
 	def movewin(self, angle, delta):
 		# get translation vector
 		vup = self.get_vup()
@@ -281,6 +308,7 @@ class Viewport(tk.Canvas):
 		# redraw scene
 		self.draw()
 	
+	# rotates the window
 	def rotate(self, angle):
 		# get rotation matrix
 		matrix = Transformer.rotation(
@@ -295,6 +323,7 @@ class Viewport(tk.Canvas):
 		self.win_angle += angle
 		self.draw()
 
+	# performs zoom in and zoom out operations
 	def zoom(self, delta):
 		# get scaling matrix
 		matrix = Transformer.scale(
