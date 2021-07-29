@@ -42,5 +42,6 @@ class Helper:
 		sum = 0
 		la = len(points)
 		for i in range(la):
-			sum += (points[(i + 1)%la][0]-points[i%la][0])*(points[(i + 1)%la][1]+points[i%la][1])
+			sum += (points[(i + 1)%la][0]-points[i%la][0])* \
+				(points[(i + 1)%la][1]+points[i%la][1])
 		return True if sum > 0 else False
