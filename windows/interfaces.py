@@ -1,6 +1,6 @@
 import tkinter as tk
 import windows.functions as wf
-from tkinter import PhotoImage, ttk
+from tkinter import Entry, PhotoImage, ttk
 from graphic_objects.shapes import *
 from utils.tk_adaptations import *
 from utils.helper import *
@@ -326,8 +326,8 @@ class NewObjectWindowInterface(SecondWindow):
 		self.ent_color = tk.Entry(self.fr_top)
 		self.chkclosed = tk.BooleanVar()
 		self.chkfilled = tk.BooleanVar()
-		self.checkB_isClosed = tk.Checkbutton(self.fr_top, variable = self.chkclosed)
-		self.checkB_isFilled= tk.Checkbutton(self.fr_top, variable = self.chkfilled)
+		self.checkB_isClosed=tk.Checkbutton(self.fr_top,variable=self.chkclosed)
+		self.checkB_isFilled=tk.Checkbutton(self.fr_top,variable=self.chkfilled)
 
 		# positioning elements
 		self.fr_top.grid(         row = 0, column = 0)
@@ -363,6 +363,52 @@ class NewObjectWindowInterface(SecondWindow):
 		self.btn_ok.grid(    row = 0, column = 0)
 		self.btn_cancel.grid(row = 0, column = 1)
 
+class NewCurveWindowInterface(SecondWindow):
+	def __init__(self, mainwindow, title_text = "New Curve"):
+		super().__init__(mainwindow, title_text)
+	
+	def _init_ui(self):
+		self.__build_body()
+		self.__build_footer()
+	
+	def __build_body(self):
+		self.fr_body = tk.Frame(self.mainframe)
+
+		self.lb_name  = Label(self.fr_body, text = "Name")
+		self.lb_coord = Label(self.fr_body, text = "Coordinates")
+		self.lb_color = Label(self.fr_body, text = "Color")
+
+		self.ent_name  = tk.Entry(self.fr_body)
+		self.ent_coord = tk.Entry(self.fr_body)
+		self.ent_color = tk.Entry(self.fr_body)
+		
+		self.fr_body.grid(  row = 0, column = 0)
+		self.lb_name.grid(  row = 0, column = 0)
+		self.ent_name.grid( row = 1, column = 0)
+		self.lb_coord.grid( row = 2, column = 0)
+		self.ent_coord.grid(row = 3, column = 0)
+		self.lb_color.grid( row = 4, column = 0)
+		self.ent_color.grid(row = 5, column = 0)
+	
+	def __build_footer(self):
+		self.fr_footer = tk.Frame(self.mainframe)
+
+		self.btn_ok = tk.Button(
+			self.fr_footer,
+			text = "Ok",
+			command = self.submit
+		)
+
+		self.btn_cancel = tk.Button(
+			self.fr_footer,
+			text = "Cancel",
+			command = self.hide
+		)
+
+		self.fr_footer.grid( row = 1, column = 0)
+		self.btn_ok.grid(    row = 0, column = 0)
+		self.btn_cancel.grid(row = 0, column = 1)
+
 class MainWindowInterface(tk.Tk):
 	def __init__(self):
 		# create window
@@ -373,6 +419,7 @@ class MainWindowInterface(tk.Tk):
 		
 		# create second windows
 		self.new_object_window = wf.NewObjectWindow(mainwindow = self)
+		self.new_curve_window = wf.NewCurveWindow(mainwindow = self)
 		self.transform_window = wf.TransformWindow(mainwindow = self)
 
 		# create canvas
@@ -417,7 +464,7 @@ class MainWindowInterface(tk.Tk):
 
 		self.lb_hints = Label(self.frame_hints, text = "Show hints")
 		self.show_hints = tk.BooleanVar()
-		self.chk_hints = tk.Checkbutton(self.frame_hints, variable=self.show_hints)
+		self.chk_hints=tk.Checkbutton(self.frame_hints,variable=self.show_hints)
 
 		self.lb_clipping = Label(self.frame_clipping, text="clipping algorithm")
 		self.clipping_type = tk.StringVar()
@@ -431,7 +478,10 @@ class MainWindowInterface(tk.Tk):
 		)
 		self.clipping_combbx['values'] = self.clipping_combbx_options
 		self.clipping_combbx["state"] = "readonly"
-		self.clipping_combbx.bind("<<ComboboxSelected>>", self.__change_clipping_type)
+		self.clipping_combbx.bind(
+			"<<ComboboxSelected>>", 
+			self.__change_clipping_type
+		)
 		self.clipping_combbx.set(self.clipping_combbx_options[0])
 
 		self.menubar = tk.Menu(self)
@@ -449,7 +499,7 @@ class MainWindowInterface(tk.Tk):
 
 		self.button_transform = tk.Button(
 			self.fr_list_box_commands,
-			text = "Tansform",
+			text = "Transform",
 			command	= self._transform_object
 		)
 
@@ -463,6 +513,12 @@ class MainWindowInterface(tk.Tk):
 			self.frame_commands,
 			text = "New Object",
 			command = self._new_object
+		)
+
+		self.button_newcurve = tk.Button(
+			self.frame_commands,
+			text = "New Curve",
+			command = self._new_curve
 		)
 
 		self.button_in = tk.Button(
@@ -515,8 +571,11 @@ class MainWindowInterface(tk.Tk):
 		ToolTip(self, self.button_right, "moves the window to the right")
 		ToolTip(self, self.button_in, "zoom in")
 		ToolTip(self, self.button_out, "zoom out")
-		ToolTip(self, self.button_transform, "translate, rotate or scale the selected object")
+		ToolTip(self, self.button_transform,
+			"translate, rotate or scale the selected object"
+		)
 		ToolTip(self, self.button_newobject, "creates a new object")
+		ToolTip(self, self.button_newcurve, "creates a new curve")
 		ToolTip(self, self.button_remove, "removes the selected object")
 		ToolTip(self, self.button_rot_left, "rotates the window to the left")
 		ToolTip(self, self.button_rot_right, "rotates the window to the right")
@@ -524,10 +583,11 @@ class MainWindowInterface(tk.Tk):
 		self.frame_left.grid(          row = 1, column = 0)
 		self.frame_commands.grid(      row = 1, column = 0)
 		self.button_newobject.grid(    row = 0, column = 0)
-		self.frame_zoom.grid(          row = 1, column = 0)
+		self.button_newcurve.grid(     row = 1, column = 0)
+		self.frame_zoom.grid(          row = 2, column = 0)
 		self.button_in.grid(           row = 0, column = 0)
 		self.button_out.grid(          row = 0, column = 1)
-		self.frame_arrows.grid(        row = 2, column = 0)
+		self.frame_arrows.grid(        row = 3, column = 0)
 		self.fr_list_box.grid(         row = 0, column = 0)
 		self.lb_objNames.grid(         row = 0, column = 0)
 		self.lst_objNames.grid(        row = 1, column = 0)
@@ -540,10 +600,10 @@ class MainWindowInterface(tk.Tk):
 		self.button_left.grid(         row = 1, column = 0, columnspan=2)
 		self.button_right.grid(        row = 1, column = 1, columnspan=2)
 		self.button_down.grid(         row = 2, column = 1)
-		self.frame_hints.grid(         row = 4, column = 0)
+		self.frame_hints.grid(         row = 5, column = 0)
 		self.lb_hints.grid(            row = 0, column = 0)
 		self.chk_hints.grid(           row = 0, column = 1)
-		self.frame_clipping.grid(      row = 3, column = 0)
+		self.frame_clipping.grid(      row = 4, column = 0)
 		self.lb_clipping.grid(         row = 0, column = 0)
 		self.clipping_combbx.grid(     row = 0, column = 1)
 

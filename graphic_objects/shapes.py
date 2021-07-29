@@ -244,3 +244,75 @@ class LazyDot(LazyGraphicObject, Dot):
 	# we only need parent functions
 	def __dummy(self):
 		pass
+
+class Curve2d(GraphicObject):
+	def __init__(self, name, canvas, coords, fill = "#000000"):
+		super().__init__(canvas, name, coords, fill = fill)
+
+		# bezier method matrix
+		self.method_matrix = [
+			[-1,  3, -3, 1],
+			[ 3, -6,  3, 0],
+			[-3,  3,  0, 0],
+			[ 1,  0,  0, 0]
+		]
+		curve_points = [self.coordinates[0]]
+		
+		# iterate throught curves
+		for i in range(0, len(self.coordinates) - 1, 3):
+			p1 = self.coordinates[i]     # initial point
+			p2 = self.coordinates[i + 1] # first control point
+			p3 = self.coordinates[i + 2] # second control point
+			p4 = self.coordinates[i + 3] # final point
+
+			points_matrix = [
+				[p1[0], p1[1], 1],
+				[p2[0], p2[1], 1],
+				[p3[0], p3[1], 1],
+				[p4[0], p4[1], 1],
+			]
+			matrix = np.dot(self.method_matrix, points_matrix)
+			step = 0.02
+			t = step
+			x1,x2,x3,x4 = matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0]
+			y1,y2,y3,y4 = matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1]
+			while (t < 1):
+				t2, t3 = t**2, t**3
+				curve_points.append(
+					(
+						(x1*t3)	+ (x2*t2) + (x3*t) + (x4),
+						(y1*t3)	+ (y2*t2) + (y3*t) + (y4),
+					)
+				)
+				t += step				
+			curve_points.append(p4)
+		# overwrite coordinates (now it's a set of ponints)
+		self.coordinates = curve_points
+	
+	def draw(self, matrix):
+		self.update_scn(matrix)
+		for i in range(len(self.scn) - 1):
+			# get clipped line
+			clipped = self.canvas.clipping_function(self.scn[i:i+2], 1)
+
+			# line is not inside window. Ignore it
+			if (not clipped):
+				continue
+
+			# get viewport coordinates
+			transformed = self.canvas.transform_viewport(clipped)
+			x1, y1 = transformed[0]
+			x2, y2 = transformed[1]
+
+			# draw a line
+			self.canvas.create_line(x1, y1, x2, y2, fill = self.fill)
+	
+	def get_center(self):
+		orderedx = self.coordinates.copy()
+		orderedy = self.coordinates.copy()
+		orderedx.sort(key=lambda x: x[0])
+		orderedy.sort(key=lambda x: x[1])
+		x = (orderedx[0][0] + orderedx[-1][0])/2
+		y = (orderedy[0][1] + orderedy[-1][1])/2
+		return (x, y)
+

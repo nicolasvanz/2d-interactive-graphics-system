@@ -18,6 +18,10 @@ class MainWindow(wi.MainWindowInterface):
 	def _new_object(self):
 		self.new_object_window.show()
 
+	# display new curve window
+	def _new_curve(self):
+		self.new_curve_window.show()
+
 	# display transform object window
 	def _transform_object(self):
 		self.transform_window.show()
@@ -197,7 +201,7 @@ class Viewport(tk.Canvas):
 			matrix,
 			tuple(map(lambda x: -x, self.get_center()))
 		)
-		matrix = Transformer.scale(matrix, (1/(size[0]/2),1/(size[1]/2)), (0,0))
+		matrix = Transformer.scale(matrix, (2/size[0],2/size[1]), (0,0))
 		matrix = Transformer.rotation(matrix,-angle, (0,0))
 		return matrix
 
@@ -250,13 +254,33 @@ class Viewport(tk.Canvas):
 			)
 
 		return transformed
-	
 		
 	# translate, scale or rotate an object
 	def transform_object(self, index, matrix):
 		obj = self.graphicObjects[index]
 		obj.transform(matrix)
 		self.draw()
+
+	def create_curve(self, name, coords, fill = "#000000"):
+		# create curve
+		curve = Curve2d(
+			"[curve]%s" % (name),
+			self,
+			coords,
+			fill
+		)
+		
+		# add new curve to the list
+		self.graphicObjects.append(curve)
+
+		# update object names list box
+		self.mainwindow.lst_objNames.insert("end", curve.name)
+
+		# draw the scene
+		self.draw()
+
+		return curve
+
 
 	# create new graphic object
 	def create_object(
@@ -335,7 +359,7 @@ class Viewport(tk.Canvas):
 		# apply rotation
 		self.edges.transform(matrix)
 
-		# update angle
+		# redraw scene
 		self.draw()
 
 	# performs zoom in and zoom out operations
@@ -398,6 +422,39 @@ class NewObjectWindow(wi.NewObjectWindowInterface):
 			color,
 			is_filled,
 		)
+
+class NewCurveWindow(wi.NewCurveWindowInterface):
+	def submit(self):
+		# get object name
+		name = self.ent_name.get()
+
+		# get object color
+		color = self.ent_color.get() 
+		
+		if (not name):
+			print("No name specified")
+			return
+		
+		if (not color):
+			color = "#000000"
+		else:
+			color = Helper.validate_hex_color_entry(color)
+			if (not color):
+				print("invalid color code")
+				return
+
+		# get coordinates list
+		coord = Helper.get_coords_from_entry(self.ent_coord.get())
+
+		if (not coord):
+			print("No coordinates specified")
+			return
+		
+		if (len(coord) % 4 != 0):
+			print("coordinates list lenght should be 4 + 3x, where x >= 0")
+			return
+
+		self.mainwindow.canvas.create_curve(name, coord, fill = color)
 
 class TransformWindow(wi.TransformWindowInterface):
 	def add(self):

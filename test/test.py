@@ -10,6 +10,18 @@ from utils.transformer import Transformer
 from windows.functions import MainWindow
 
 
+def heart(root):
+	obj = root.canvas.create_curve(
+		"heart",
+		[
+			(0, -100), (-300, 100), (-50, 200), (0, 100), 
+			(50, 200), (300, 100), (0, -100),
+			(-150, 50), (-25, 100), (0, 50),
+			(25, 100), (150, 50), (0, -50),
+		]
+	)
+	return obj
+
 def square(root):
 	obj = root.canvas.create_object(
 		"square",
@@ -46,20 +58,23 @@ def batman(root):
 	return obj
 
 def test():
+	tests = {
+		1 : batman,
+		2 : square,
+		3 : heart,
+	}
+
 	if (len(sys.argv) < 2):
 		print("incorrect use. Usage: test.py <number>\n")
-		print("<number>:\n1-batman\n2-square")
+		print("<number>:")
+		for key, value in tests.items():
+			print("%d-%s" % (key, value.__name__))
 		exit()
 	try:
 		a = int(sys.argv[1])
 	except ValueError:
 		print("argument must be an integer")
 		exit()
-
-	tests = {
-		1 : batman,
-		2 : square
-	}
 
 	root = MainWindow()
 	tests[a](root)
