@@ -8,6 +8,7 @@ The main window interface is divided in three sections:
 - the commands frame, that is divided in:
   - The objects list box, in which are displayed all objects names in the scene
   - The "New Object" Button, where new objects can be added through the creation of the "New Object" window
+  - The "New Curve" Button, where new bezier curves can be created though the creation of the "New Curve" window
   - The "Remove" button, that removes the selected object from the scene
   - The "Transform" button, that transforms the selected object through the creation of the "Transform Object" window 
   - The zoom buttons: responsable for zoom in and zoom out functionalities
@@ -20,6 +21,11 @@ The "New Object" window is responsable for the creation of a new object.
  - If the first coordinate is connected to the last coordinate, the "is a closed object" checkbox must be marked
  - "Ok" button confirms the object creation
  - Optionally, a rgb color code can be specified to create the object. The default is black. The code must follow one of the **RGBF. Note that tkinter does not support all color codes
+
+The "New Curve" window is responsable for the creation of a new bezier curve.
+ - It must be specified a name for the curve
+ - It must be specified 4 + 3x coordinates (x >= 0). The first 4 coordinates create the first curve, where the first point is where the curve begins, the second point is the first control point, the third point is the second control point and the fourth is where the curve ends. To connect another curve, 3 more points can be specified: first control point, second control point and final point. (note that the curve initiates where the last has stopped). Coordinates must follow **MCF
+ - Optionally, a rgb color code can be specified. The code must follow the **RGBF
 
 The "Transform Object" window is responsable for the object transformation functions (translation, rotation and scaling)
  - It must be checked which transformations are going to be aplied.
