@@ -328,6 +328,8 @@ class Curve_bSpline(GraphicObject):
 			[6*step3, 2*step2, 0, 0],
 			[6*step3, 0, 0, 0]
 		]
+		curve_points = []
+
 		# iterate throught curves
 		for i in range(3, len(self.coordinates)):
 			p1 = self.coordinates[i - 3]     # first control point
@@ -346,7 +348,7 @@ class Curve_bSpline(GraphicObject):
 			matrixD = np.dot(init_matrix, matrix_geo)
 			x, delta_x1, delta_x2, delta_x3 = matrixD[0][0], matrixD[1][0], matrixD[2][0], matrixD[3][0]
 			y, delta_y1, delta_y2, delta_y3 = matrixD[0][1], matrixD[1][1], matrixD[2][1], matrixD[3][1]
-			curve_points = [(x, y)]
+			curve_points.append((x, y))
 
 			curve_points = Helper_curves.fwd_diff(curve_points, step, x, delta_x1, delta_x2, delta_x3,
 									y, delta_y1, delta_y2, delta_y3)
