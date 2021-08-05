@@ -289,6 +289,23 @@ class Curve2d(GraphicObject):
 			curve_points.append(p4)
 		# overwrite coordinates (now it's a set of ponints)
 		self.coordinates = curve_points
+	def draw(self, matrix):
+		self.update_scn(matrix)
+		for i in range(len(self.scn) - 1):
+			# get clipped line
+			clipped = self.canvas.clipping_function(self.scn[i:i+2], 1)
+
+			# line is not inside window. Ignore it
+			if (not clipped):
+				continue
+
+			# get viewport coordinates
+			transformed = self.canvas.transform_viewport(clipped)
+			x1, y1 = transformed[0]
+			x2, y2 = transformed[1]
+
+			# draw a line
+			self.canvas.create_line(x1, y1, x2, y2, fill = self.fill)
 
 class Curve_bSpline(GraphicObject):
 	def __init__(self, name, canvas, coords, fill = "#000000"):

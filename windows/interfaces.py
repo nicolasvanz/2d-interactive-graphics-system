@@ -382,13 +382,27 @@ class NewCurveWindowInterface(SecondWindow):
 		self.ent_coord = tk.Entry(self.fr_body)
 		self.ent_color = tk.Entry(self.fr_body)
 		
-		self.fr_body.grid(  row = 0, column = 0)
-		self.lb_name.grid(  row = 0, column = 0)
-		self.ent_name.grid( row = 1, column = 0)
-		self.lb_coord.grid( row = 2, column = 0)
-		self.ent_coord.grid(row = 3, column = 0)
-		self.lb_color.grid( row = 4, column = 0)
-		self.ent_color.grid(row = 5, column = 0)
+		self.curve_type = tk.StringVar()
+		self.curve_combbx = ttk.Combobox(
+			self.fr_body,
+			textvariable= self.curve_type
+		)
+		self.curve_combbx_options = (
+			"Spline",
+			"Bezier"
+		)
+		self.curve_combbx['values'] = self.curve_combbx_options
+		self.curve_combbx["state"] = "readonly"
+		self.curve_combbx.set(self.curve_combbx_options[0])
+
+		self.fr_body.grid(     row = 0, column = 0)
+		self.curve_combbx.grid(row = 0, column = 0)
+		self.lb_name.grid(     row = 1, column = 0)
+		self.ent_name.grid(    row = 2, column = 0)
+		self.lb_coord.grid(    row = 3, column = 0)
+		self.ent_coord.grid(   row = 4, column = 0)
+		self.lb_color.grid(    row = 5, column = 0)
+		self.ent_color.grid(   row = 6, column = 0)
 	
 	def __build_footer(self):
 		self.fr_footer = tk.Frame(self.mainframe)
@@ -416,6 +430,8 @@ class MainWindowInterface(tk.Tk):
 
 		# we shouldn't place elements directly in root
 		self.mainframe = Frame(self)
+		self.frame_right = Frame(self.mainframe)
+		self.frame_left = Frame(self.mainframe)
 		
 		# create second windows
 		self.new_object_window = wf.NewObjectWindow(mainwindow = self)
@@ -423,7 +439,7 @@ class MainWindowInterface(tk.Tk):
 		self.transform_window = wf.TransformWindow(mainwindow = self)
 
 		# create canvas
-		self.canvas = wf.Viewport(self.mainframe, mainwindow = self)
+		self.canvas = wf.Viewport(self.frame_right, mainwindow = self)
 
 		self.obj_helper = Obj_helper(self.canvas)
 
@@ -431,13 +447,13 @@ class MainWindowInterface(tk.Tk):
 		self.__init_ui()
 		
 		self.mainframe.grid(row = 0, column = 0)
-		self.canvas.grid(row = 1, column = 1)
+		self.canvas.grid(row = 0, column = 0)
 		# window is not resizable
 		self.wm_resizable(False, False)
 		self.title("SGI")
 
 	def __init_ui(self):
-		self.frame_left = Frame(self.mainframe)
+		self.frame_angle = Frame(self.frame_right)
 		self.frame_commands = Frame(self.frame_left)
 		self.frame_zoom = Frame(self.frame_commands)
 		self.frame_arrows = Frame(self.frame_commands)
@@ -461,6 +477,10 @@ class MainWindowInterface(tk.Tk):
 			9  : PhotoImage(file=Helper.get_image_file("import.png")),
 			10 : PhotoImage(file=Helper.get_image_file("export.png")),
 		}
+
+		self.lb_delta_angle = Label(self.frame_angle, text = "rotation angle:")
+		self.ent_delta_angle = Entry(self.frame_angle)
+		self.ent_delta_angle.insert(0, "10")
 
 		self.lb_hints = Label(self.frame_hints, text = "Show hints")
 		self.show_hints = tk.BooleanVar()
@@ -580,7 +600,11 @@ class MainWindowInterface(tk.Tk):
 		ToolTip(self, self.button_rot_left, "rotates the window to the left")
 		ToolTip(self, self.button_rot_right, "rotates the window to the right")
 
-		self.frame_left.grid(          row = 1, column = 0)
+		self.frame_left.grid(          row = 0, column = 0)
+		self.frame_right.grid(         row = 0, column = 1)
+		self.frame_angle.grid(         row = 1, column = 0)
+		self.lb_delta_angle.grid(      row = 0, column = 0)
+		self.ent_delta_angle.grid(     row = 0, column = 1)
 		self.frame_commands.grid(      row = 1, column = 0)
 		self.button_newobject.grid(    row = 0, column = 0)
 		self.button_newcurve.grid(     row = 1, column = 0)

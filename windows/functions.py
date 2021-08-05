@@ -77,11 +77,21 @@ class MainWindow(wi.MainWindowInterface):
 
 	# rotates window to the left
 	def _rotate_left(self):
-		self.canvas.rotate(self.canvas.delta_angle)
+		try:
+			angle = int(self.ent_delta_angle.get())
+		except ValueError:
+			print("invalid angle coeficient specified")
+			return
+		self.canvas.rotate(angle)
 
 	# rotates window to the right
 	def _rotate_right(self):
-		self.canvas.rotate(-self.canvas.delta_angle)
+		try:
+			angle = int(self.ent_delta_angle.get())
+		except ValueError:
+			print("invalid angle coeficient specified")
+			return
+		self.canvas.rotate(-angle)
 
 	# import obj file
 	def _import_objfile(self):
@@ -135,7 +145,6 @@ class Viewport(tk.Canvas):
 		# navigation coefitients
 		self.delta_move = 1/10
 		self.delta_zoom = 1.1
-		self.delta_angle = 10
 
 		# scene scale
 		self.imgscale = 1
@@ -261,15 +270,32 @@ class Viewport(tk.Canvas):
 		obj.transform(matrix)
 		self.draw()
 
-	def create_curve(self, name, coords, fill = "#000000"):
+	def create_curve(
+		self, 
+		name, 
+		coords, 
+		fill = "#000000", 
+		spline = False, 
+		bezier = False
+	):
 		# create curve
-		curve = Curve2d(
-			"[curve]%s" % (name),
-			self,
-			coords,
-			fill
-		)
-		
+		if bezier:
+			curve = Curve2d(
+				"[curve]%s" % (name),
+				self,
+				coords,
+				fill
+			)
+		elif spline:
+			curve = Curve_bSpline(
+				"[curve]%s" % (name),
+				self,
+				coords,
+				fill
+			)
+		else:
+			print("unexpected error when creating curve")
+				
 		# add new curve to the list
 		self.graphicObjects.append(curve)
 
@@ -280,7 +306,6 @@ class Viewport(tk.Canvas):
 		self.draw()
 
 		return curve
-
 
 	# create new graphic object
 	def create_object(
@@ -453,8 +478,23 @@ class NewCurveWindow(wi.NewCurveWindowInterface):
 		if (len(coord) % 4 != 0):
 			print("coordinates list lenght should be 4 + 3x, where x >= 0")
 			return
+		
+		s, b = False, False
+		if (self.curve_type == self.curve_combbx_options[1]):
+			b = True						
+		elif self.curve_type == self.curve_combbx_options[0]:
+			s = True
+		else:
+			print("unexpected error when creating curve")
+			return
 
-		self.mainwindow.canvas.create_curve(name, coord, fill = color)
+		self.mainwindow.canvas.create_curve(
+			name, 
+			coord, 
+			fill = color, 
+			spline = s,
+			bezier = b
+		)
 
 class TransformWindow(wi.TransformWindowInterface):
 	def add(self):
