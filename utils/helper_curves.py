@@ -14,5 +14,5 @@ class Helper_curves:
             y = y + delta_y1
             delta_y1 = delta_y1 + delta_y2
             delta_y2 = delta_y2 + delta_y3
-            curve_points.append(x, y)
+            curve_points.append((x, y))
         return curve_points

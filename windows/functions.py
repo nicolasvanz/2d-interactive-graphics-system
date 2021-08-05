@@ -468,6 +468,15 @@ class NewCurveWindow(wi.NewCurveWindowInterface):
 				print("invalid color code")
 				return
 
+		s, b = False, False
+		if (self.curve_type.get() == self.curve_combbx_options[1]):
+			b = True						
+		elif (self.curve_type.get() == self.curve_combbx_options[0]):
+			s = True
+		else:
+			print("unexpected error when creating curve")
+			return
+
 		# get coordinates list
 		coord = Helper.get_coords_from_entry(self.ent_coord.get())
 
@@ -475,17 +484,11 @@ class NewCurveWindow(wi.NewCurveWindowInterface):
 			print("No coordinates specified")
 			return
 		
-		if (len(coord) % 4 != 0):
+		if (b and len(coord) % 4 != 0):
 			print("coordinates list lenght should be 4 + 3x, where x >= 0")
 			return
-		
-		s, b = False, False
-		if (self.curve_type == self.curve_combbx_options[1]):
-			b = True						
-		elif self.curve_type == self.curve_combbx_options[0]:
-			s = True
-		else:
-			print("unexpected error when creating curve")
+		elif (s and len(coord) < 4):
+			print("coordinates list lenght should be greater than 4")
 			return
 
 		self.mainwindow.canvas.create_curve(
