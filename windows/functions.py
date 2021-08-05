@@ -488,7 +488,7 @@ class NewCurveWindow(wi.NewCurveWindowInterface):
 			print("coordinates list lenght should be 4 + 3x, where x >= 0")
 			return
 		elif (s and len(coord) < 4):
-			print("coordinates list lenght should be greater than 4")
+			print("coordinates list lenght should be greater than or equal to 4")
 			return
 
 		self.mainwindow.canvas.create_curve(
