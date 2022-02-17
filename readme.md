@@ -56,7 +56,7 @@ The "Transform Object" window is responsable for the object transformation funct
 # Running code
 #### Create virtual environment
 ```
-python -m virtualenv env
+python3 -m virtualenv env
 ```
 #### Activate environment
 ```
@@ -64,9 +64,12 @@ source env/bin/activate
 ```
 #### Install dependencies
 ```
-pip install -r requirements.txt
+apt-get install python3-tk
+```
+```
+pip3 install -r requirements.txt
 ```
 #### Run code
 ```
-python main.py
+python3 main.py
 ```
