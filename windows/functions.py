@@ -31,7 +31,7 @@ class MainWindow(wi.MainWindowInterface):
 		# get selected element in the object list
 		index = self.lst_objNames.curselection()
 		
-		# must be one and only one object
+		# must be only one object
 		if (len(index) != 1): return -1
 
 		return index[0]
@@ -67,29 +67,29 @@ class MainWindow(wi.MainWindowInterface):
 	def _move_down(self):
 		self.canvas.movewin(0, -self.canvas.delta_move)
 
-	# moves window to the left
+	# moves the window to the left
 	def _move_left(self):
 		self.canvas.movewin(90, self.canvas.delta_move)
 
-	# moves window to the right
+	# moves the window to the right
 	def _move_right(self):
 		self.canvas.movewin(-90, self.canvas.delta_move)
 
-	# rotates window to the left
+	# rotates the window to the left
 	def _rotate_left(self):
 		try:
 			angle = int(self.ent_delta_angle.get())
 		except ValueError:
-			print("invalid angle coeficient specified")
+			print("invalid angle coefficient specified")
 			return
 		self.canvas.rotate(angle)
 
-	# rotates window to the right
+	# rotates the window to the right
 	def _rotate_right(self):
 		try:
 			angle = int(self.ent_delta_angle.get())
 		except ValueError:
-			print("invalid angle coeficient specified")
+			print("invalid angle coefficient specified")
 			return
 		self.canvas.rotate(-angle)
 
@@ -130,7 +130,7 @@ class Viewport(tk.Canvas):
 		self.subcanvas = Subcanvas(
 			self,
 			"subcanvas",
-			# coordinates are specified in canvas coordinates
+			# this coordinates are specified in canvas coordinates system
 			[
 				(coef, coef),
 				(coef, coefh),
@@ -142,14 +142,14 @@ class Viewport(tk.Canvas):
 		# current clipping algorithm
 		self.clipping_function = Clipper.cohen_sutherland
 
-		# navigation coefitients
+		# navigation coefficients
 		self.delta_move = 1/10
 		self.delta_zoom = 1.1
 
 		# scene scale
 		self.imgscale = 1
 
-		# window coordinates
+		# window's border coordinates
 		self.edges = LazyWireframe(
 			[
 				(-self.width/2, -self.width/2),
@@ -238,14 +238,13 @@ class Viewport(tk.Canvas):
 			fill = "green"
 		)
 
-		# add axis to the axis_list
 		self.axis_list.append(self.axisx)
 		self.axis_list.append(self.axisy)
 		
 		# draw scene
 		self.draw()
 	
-	# transform from window coordinates to viewport coordinates
+	# transform from window coordinates system to viewport coordinates system
 	def transform_viewport(self, coords):
 		transformed = []
 		# note that our drawable area is smaller than the canvas size
@@ -509,7 +508,7 @@ class TransformWindow(wi.TransformWindowInterface):
 				return
 			self.transformation_index = index
 
-		# get selected object itself
+		# get the selected object
 		obj = self.mainwindow.canvas.graphicObjects[index]
 
 		# get checkbox values

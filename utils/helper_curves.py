@@ -1,7 +1,7 @@
 
 
 class Helper_curves:
-    # We are using the Newton forward differences method for calculating the points of the curve.
+    # Newton forward differences method to calculate curve points
     @staticmethod
     def fwd_diff(curve_points, step, x, delta_x1, delta_x2, delta_x3, 
                     y, delta_y1, delta_y2, delta_y3):

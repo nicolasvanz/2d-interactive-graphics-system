@@ -8,7 +8,7 @@ class Transformer:
 	def identity():
 		return [[1.0, 0, 0], [0, 1.0, 0], [0, 0, 1.0]]
 
-	# returns a rotation matrix to the given angle an reference point
+	# returns a rotation matrix to the given angle and reference point
 	@staticmethod
 	def rotation(matrix, angle, ref_point):
 		cos = math.cos(math.radians(angle))
@@ -24,7 +24,7 @@ class Transformer:
 			result = Transformer.translation(inter_result.tolist(), ref_point)
 			return result
 	
-	# returns a rotation matrix to the given reference point
+	# returns a translation matrix to the given reference point
 	@staticmethod
 	def translation(matrix, ref_point):
 		dx = ref_point[0]

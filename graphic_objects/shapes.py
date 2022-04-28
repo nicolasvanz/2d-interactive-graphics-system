@@ -83,8 +83,6 @@ class Dot(GraphicObject):
 		# get viewport coordinates
 		c = self.canvas.transform_viewport(self.scn)
 		x, y = c[0]
-
-		# draw a line
 		self.canvas.create_line(x, y, x + 1, y, fill = self.fill)
 	
 	def get_center(self):
@@ -96,7 +94,7 @@ class Line(GraphicObject):
 		# normalize coordinates
 		self.update_scn(matrix)
 
-		# gets clipped line
+		# get clipped line
 		clipped = self.canvas.clipping_function(self.scn, 1)
 
 		# line is not inside window. Ignore it
@@ -108,8 +106,6 @@ class Line(GraphicObject):
 
 		x1, y1 = c[0]
 		x2, y2 = c[1]
-
-		# draw a line
 		self.canvas.create_line(x1, y1, x2, y2, fill = self.fill)
 	
 	def get_center(self):
@@ -126,7 +122,6 @@ class Wireframe(GraphicObject):
 		# normalize coordinates
 		self.update_scn(matrix)
 
-		# is a filled object?
 		if (self.is_filled):
 			self.__draw_filled()
 		else:
@@ -145,8 +140,6 @@ class Wireframe(GraphicObject):
 			transformed = self.canvas.transform_viewport(clipped)
 			x1, y1 = transformed[0]
 			x2, y2 = transformed[1]
-
-			# draw a line
 			self.canvas.create_line(x1, y1, x2, y2, fill = self.fill)
 		
 		# is a closed shape? If so, connect first and last points
@@ -178,7 +171,6 @@ class Wireframe(GraphicObject):
 		for p in transformed:
 			temp.extend(p)
 
-		# draw a filled polygon
 		self.canvas.create_polygon(temp, fill = self.fill)
 
 	def get_center(self):
@@ -259,7 +251,7 @@ class Curve2d(GraphicObject):
 		]
 		curve_points = [self.coordinates[0]]
 		
-		# iterate throught curves
+		# iterate through curves
 		for i in range(0, len(self.coordinates) - 1, 3):
 			p1 = self.coordinates[i]     # initial point
 			p2 = self.coordinates[i + 1] # first control point
@@ -287,10 +279,12 @@ class Curve2d(GraphicObject):
 				)
 				t += step				
 			curve_points.append(p4)
-		# overwrite coordinates (now it's a set of ponints)
+		# overwrite coordinates (now it's a set of points)
 		self.coordinates = curve_points
+
 	def draw(self, matrix):
 		self.update_scn(matrix)
+
 		for i in range(len(self.scn) - 1):
 			# get clipped line
 			clipped = self.canvas.clipping_function(self.scn[i:i+2], 1)
@@ -303,8 +297,6 @@ class Curve2d(GraphicObject):
 			transformed = self.canvas.transform_viewport(clipped)
 			x1, y1 = transformed[0]
 			x2, y2 = transformed[1]
-
-			# draw a line
 			self.canvas.create_line(x1, y1, x2, y2, fill = self.fill)
 
 class Curve_bSpline(GraphicObject):
@@ -320,7 +312,6 @@ class Curve_bSpline(GraphicObject):
 		]
 		step = 0.02
 		step2, step3 = step**2, step**3 
-		#curve_points = [self.coordinates[0]]
 
 		init_matrix = [
 			[0, 0, 0, 1],
@@ -330,12 +321,12 @@ class Curve_bSpline(GraphicObject):
 		]
 		curve_points = []
 
-		# iterate throught curves
+		# iterate through curves
 		for i in range(3, len(self.coordinates)):
-			p1 = self.coordinates[i - 3]     # first control point
+			p1 = self.coordinates[i - 3] # first control point
 			p2 = self.coordinates[i - 2] # second control point
 			p3 = self.coordinates[i - 1] # third control point
-			p4 = self.coordinates[i] # final control point
+			p4 = self.coordinates[i]     # final control point
 
 			points_matrix = [
 				[p1[0], p1[1], 1],
@@ -353,7 +344,7 @@ class Curve_bSpline(GraphicObject):
 			curve_points = Helper_curves.fwd_diff(curve_points, step, x, delta_x1, delta_x2, delta_x3,
 									y, delta_y1, delta_y2, delta_y3)
 												
-		# overwrite coordinates (now it's a set of ponints)
+		# overwrite coordinates (now it's a set of points)
 		self.coordinates = curve_points	
 
 	def draw(self, matrix):
@@ -370,8 +361,6 @@ class Curve_bSpline(GraphicObject):
 			transformed = self.canvas.transform_viewport(clipped)
 			x1, y1 = transformed[0]
 			x2, y2 = transformed[1]
-
-			# draw a line
 			self.canvas.create_line(x1, y1, x2, y2, fill = self.fill)
 	
 	def get_center(self):

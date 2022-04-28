@@ -9,7 +9,7 @@ class Obj_helper:
 			for coord in graph_obj.coordinates:
 				vertices.append(coord)
 		vertices = list(set(vertices))
-		# Writing to the corresponding file .obj.
+		# Writing to the corresponding .obj file
 		file = open(filename, 'w')
 		for ver in vertices:
 			file.write("v " + str(ver[0]) + " " + str(ver[1]) + " 0.0\n")

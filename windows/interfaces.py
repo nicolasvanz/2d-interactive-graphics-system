@@ -27,7 +27,6 @@ class SecondWindow(tk.Toplevel):
 		# create second window
 		super().__init__()
 
-		# set title
 		self.title(self.title_text)
 		
 		# we shouldn't place elements directly in root
@@ -40,7 +39,6 @@ class SecondWindow(tk.Toplevel):
 		# window is not resizable
 		self.wm_resizable(False, False)
 
-		# set window as initiated
 		self.initiated = True
 
 	def show(self):
@@ -329,7 +327,7 @@ class NewObjectWindowInterface(SecondWindow):
 		self.checkB_isClosed=tk.Checkbutton(self.fr_top,variable=self.chkclosed)
 		self.checkB_isFilled=tk.Checkbutton(self.fr_top,variable=self.chkfilled)
 
-		# positioning elements
+		# placing elements
 		self.fr_top.grid(         row = 0, column = 0)
 		self.lb_name.grid(        row = 0, column = 0)
 		self.ent_name.grid(       row = 1, column = 0)
@@ -358,7 +356,7 @@ class NewObjectWindowInterface(SecondWindow):
 			command = self.hide
 		)
 
-		# positioning elements
+		# placing elements
 		self.fr_bottom.grid( row = 2, column = 0)
 		self.btn_ok.grid(    row = 0, column = 0)
 		self.btn_cancel.grid(row = 0, column = 1)

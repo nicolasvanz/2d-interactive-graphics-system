@@ -77,7 +77,7 @@ class Clipper:
 	
 	@staticmethod
 	def cohen_sutherland(line, coef):
-		# get line cooerdinates
+		# get line coordinates
 		x1, y1 = line[0]
 		x2, y2 = line[1]
 
@@ -86,15 +86,15 @@ class Clipper:
 		code2 = Clipper.region_code(x2, y2, coef)
 		valid = False
 	
-		# clip line coordinates to the window border until it gets accepted
-		# (entire in window) or reject (entire outside window)
+		# clip line coordinates into the window border until it gets accepted
+		# (entirely inside the window) or reject (entirely outside the window)
 		while True:
-			# entire line inside window
+			# line inside window
 			if code1 == 0 and code2 == 0:
 				valid = True
 				break
 
-			# entire line outside window
+			# line outside window
 			elif (code1 & code2) != 0:
 				break
 	
@@ -137,7 +137,7 @@ class Clipper:
 				neg.append(q[i]/p[i])
 			elif p[i] > 0:
 				pos.append(q[i]/p[i])
-			# line is parallel to window border and is entire outside window
+			# line parallel to window border and entirely outside the window
 			elif (q[i] < 0):
 					return []
 		
